@@ -417,6 +417,28 @@ async def upload_note(
     }
 
 
+@app.get("/admin/notes", response_model=List[NoteResponse])
+def get_all_notes(
+    current_user: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    """
+    Get all uploaded notes with subject information.
+    Admin only.
+    """
+    notes = db.query(Note).join(Subject).order_by(Note.uploaded_at.desc()).all()
+    
+    return [
+        {
+            "id": str(note.id),
+            "filename": note.filename,
+            "subject_name": note.subject.name,
+            "uploaded_at": note.uploaded_at.isoformat()
+        }
+        for note in notes
+    ]
+
+
 @app.delete("/admin/note/{note_id}", status_code=status.HTTP_200_OK)
 def delete_note(
     note_id: str,

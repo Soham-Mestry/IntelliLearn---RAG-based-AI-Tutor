@@ -90,6 +90,31 @@ function ChatBox() {
         }
     };
 
+    // Format message text to preserve line breaks and basic markdown
+    const formatMessage = (text) => {
+        if (!text) return '';
+
+        // Split by lines and process each line
+        const lines = text.split('\n');
+
+        return lines.map((line, index) => {
+            // Handle bold text (**text**)
+            let formattedLine = line.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+
+            // Handle bullet points (* item or - item)
+            if (line.trim().startsWith('* ') || line.trim().startsWith('- ')) {
+                formattedLine = formattedLine.replace(/^[\*\-]\s/, '• ');
+            }
+
+            return (
+                <span key={index}>
+                    <span dangerouslySetInnerHTML={{ __html: formattedLine }} />
+                    {index < lines.length - 1 && <br />}
+                </span>
+            );
+        });
+    };
+
     return (
         <div className="chatbox-container">
             {/* Messages Area */}
@@ -116,7 +141,7 @@ function ChatBox() {
                                     {msg.type === 'user' ? '👤' : '🤖'}
                                 </div>
                                 <div className="message-content">
-                                    <div className="message-text">{msg.text}</div>
+                                    <div className="message-text">{formatMessage(msg.text)}</div>
                                     {msg.sources && msg.sources.length > 0 && (
                                         <div className="message-sources">
                                             <small>

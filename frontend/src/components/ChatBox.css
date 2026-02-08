@@ -118,9 +118,31 @@
     padding: 12px 16px;
     border-radius: 12px;
     font-size: 14px;
-    line-height: 1.5;
+    line-height: 1.8;
     white-space: pre-wrap;
     word-wrap: break-word;
+}
+
+/* Enhanced formatting for AI responses */
+.message-ai .message-text {
+    background: white;
+    color: #1f2937;
+    border: 1px solid #e5e7eb;
+    border-bottom-left-radius: 4px;
+}
+
+.message-ai .message-text strong {
+    color: #1e40af;
+    font-weight: 600;
+}
+
+.message-ai .message-text code,
+.message-ai .message-text [style*="monospace"] {
+    font-family: 'Courier New', monospace;
+    background: #f3f4f6;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 13px;
 }
 
 .message-user .message-text {

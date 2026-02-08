@@ -96,6 +96,11 @@ export const uploadNote = async (file, subjectId) => {
     return response.data;
 };
 
+export const getAllNotes = async () => {
+    const response = await api.get('/admin/notes');
+    return response.data;
+};
+
 export const deleteNote = async (noteId) => {
     const response = await api.delete(`/admin/note/${noteId}`);
     return response.data;
