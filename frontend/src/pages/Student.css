@@ -1,0 +1,122 @@
+/* Student Dashboard Layout */
+.student-layout {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 20px;
+    padding: 20px;
+    max-width: 1400px;
+    margin: 0 auto;
+    min-height: calc(100vh - 100px);
+}
+
+/* Left Sidebar */
+.sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.sidebar-section {
+    padding: 20px;
+}
+
+.sidebar-section h2 {
+    font-size: 18px;
+    margin-bottom: 16px;
+}
+
+/* Semester Grid */
+.semester-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+}
+
+.semester-grid .btn {
+    padding: 8px 4px;
+    font-size: 13px;
+}
+
+/* Subjects List */
+.subject-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.subject-item {
+    padding: 10px 12px;
+    background: #f9fafb;
+    border-radius: 6px;
+    font-size: 14px;
+    border: 1px solid #e5e7eb;
+    transition: all 0.2s;
+}
+
+.subject-item:hover {
+    background: #f3f4f6;
+    border-color: #d1d5db;
+}
+
+/* Main Content Area */
+.main-content {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.questions-header {
+    display: flex;
+    justify-content: flex-end;
+}
+
+/* History Section */
+.history-section {
+    flex: 1;
+    max-height: calc(100vh - 200px);
+    overflow-y: auto;
+}
+
+.history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.history-item {
+    padding: 16px;
+    background: #f9fafb;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .student-layout {
+        grid-template-columns: 1fr;
+        padding: 12px;
+    }
+
+    .sidebar {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+
+    .semester-grid {
+        grid-template-columns: repeat(8, 1fr);
+    }
+}
+
+@media (max-width: 640px) {
+    .sidebar {
+        grid-template-columns: 1fr;
+    }
+
+    .semester-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
