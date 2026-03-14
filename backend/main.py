@@ -4,6 +4,7 @@ All routes for authentication, student features, and admin features.
 """
 from fastapi import FastAPI, Depends, HTTPException, status, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, EmailStr, validator
 from sqlalchemy.orm import Session
 from typing import List, Optional
@@ -14,7 +15,7 @@ import uuid
 
 # Local imports
 from database import get_db, init_db
-from models import User, Subject, Note, QnALog
+from models import User, Subject, Note, QnALog, StudentQuery, QueryAnswer
 from auth import (
     hash_password,
     verify_password,
@@ -44,6 +45,9 @@ app.add_middleware(
 # Create uploads directory if not exists
 UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+# Mount uploads directory to serve static files
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 
 # ============= Pydantic Models for Request/Response =============
@@ -127,6 +131,41 @@ class NoteResponse(BaseModel):
     filename: str
     subject_name: str
     uploaded_at: str
+
+
+class QueryAnswerResponse(BaseModel):
+    id: str
+    user_name: str
+    answer_text: str
+    created_at: str
+    
+    class Config:
+        from_attributes = True
+
+class StudentQueryResponse(BaseModel):
+    id: str
+    user_name: str
+    title: str
+    description: str
+    image_path: Optional[str] = None
+    created_at: str
+    answer_count: int = 0
+    
+    class Config:
+        from_attributes = True
+
+class StudentQueryDetailResponse(StudentQueryResponse):
+    answers: List[QueryAnswerResponse] = []
+
+
+class AnswerCreate(BaseModel):
+    answer_text: str
+    
+    @validator('answer_text')
+    def answer_not_empty(cls, v):
+        if not v.strip():
+            raise ValueError('Answer cannot be empty')
+        return v
 
 
 # ============= Startup Event =============
@@ -307,6 +346,149 @@ def get_user_history(
         }
         for log in history
     ]
+
+
+@app.post("/student/queries", response_model=StudentQueryResponse, status_code=status.HTTP_201_CREATED)
+async def create_query(
+    title: str = Form(...),
+    description: str = Form(...),
+    image: Optional[UploadFile] = File(None),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Create a new query with an optional image upload.
+    """
+    if not title.strip() or not description.strip():
+        raise HTTPException(status_code=400, detail="Title and description are required")
+        
+    image_path = None
+    if image and image.filename:
+        # Validate file type
+        allowed_extensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp']
+        file_extension = os.path.splitext(image.filename)[1].lower()
+        
+        if file_extension not in allowed_extensions:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Image type not supported. Allowed: {', '.join(allowed_extensions)}"
+            )
+            
+        unique_filename = f"query_{uuid.uuid4()}{file_extension}"
+        image_path = os.path.join(UPLOAD_DIR, unique_filename)
+        
+        try:
+            with open(image_path, "wb") as buffer:
+                shutil.copyfileobj(image.file, buffer)
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Error saving image: {str(e)}"
+            )
+            
+    new_query = StudentQuery(
+        id=uuid.uuid4(),
+        user_id=current_user.id,
+        title=title,
+        description=description,
+        image_path=image_path
+    )
+    db.add(new_query)
+    db.commit()
+    db.refresh(new_query)
+    
+    return {
+        "id": str(new_query.id),
+        "user_name": current_user.name,
+        "title": new_query.title,
+        "description": new_query.description,
+        "image_path": new_query.image_path,
+        "created_at": new_query.created_at.isoformat(),
+        "answer_count": 0
+    }
+
+@app.get("/student/queries", response_model=List[StudentQueryResponse])
+def get_queries(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """List all student queries"""
+    from sqlalchemy.orm import joinedload
+    queries = db.query(StudentQuery).options(joinedload(StudentQuery.user), joinedload(StudentQuery.answers)).order_by(StudentQuery.created_at.desc()).all()
+    
+    return [
+        {
+            "id": str(q.id),
+            "user_name": q.user.name,
+            "title": q.title,
+            "description": q.description,
+            "image_path": q.image_path,
+            "created_at": q.created_at.isoformat(),
+            "answer_count": len(q.answers)
+        }
+        for q in queries
+    ]
+
+@app.get("/student/queries/{query_id}", response_model=StudentQueryDetailResponse)
+def get_query_details(
+    query_id: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Get detail of a query with its answers"""
+    from sqlalchemy.orm import joinedload
+    q = db.query(StudentQuery).filter(StudentQuery.id == query_id).options(joinedload(StudentQuery.user), joinedload(StudentQuery.answers)).first()
+    
+    if not q:
+        raise HTTPException(status_code=404, detail="Query not found")
+        
+    return {
+        "id": str(q.id),
+        "user_name": q.user.name,
+        "title": q.title,
+        "description": q.description,
+        "image_path": q.image_path,
+        "created_at": q.created_at.isoformat(),
+        "answer_count": len(q.answers),
+        "answers": [
+            {
+                "id": str(a.id),
+                "user_name": a.user.name,
+                "answer_text": a.answer_text,
+                "created_at": a.created_at.isoformat()
+            }
+            for a in q.answers
+        ]
+    }
+
+@app.post("/student/queries/{query_id}/answers", response_model=QueryAnswerResponse, status_code=status.HTTP_201_CREATED)
+def post_query_answer(
+    query_id: str,
+    answer_data: AnswerCreate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Post an answer to a query"""
+    query = db.query(StudentQuery).filter(StudentQuery.id == query_id).first()
+    if not query:
+        raise HTTPException(status_code=404, detail="Query not found")
+        
+    new_answer = QueryAnswer(
+        id=uuid.uuid4(),
+        query_id=query.id,
+        user_id=current_user.id,
+        answer_text=answer_data.answer_text
+    )
+    db.add(new_answer)
+    db.commit()
+    db.refresh(new_answer)
+    
+    return {
+        "id": str(new_answer.id),
+        "user_name": current_user.name,
+        "answer_text": new_answer.answer_text,
+        "created_at": new_answer.created_at.isoformat()
+    }
 
 
 # ============= Admin Routes (Protected) =============

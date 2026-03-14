@@ -88,3 +88,34 @@ class QnALog(Base):
     
     # Relationship
     user = relationship("User", back_populates="qna_logs")
+
+
+class StudentQuery(Base):
+    """Model for queries asked by students"""
+    __tablename__ = "student_queries"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    title = Column(String(255), nullable=False)
+    description = Column(Text, nullable=False)
+    image_path = Column(String(500), nullable=True)  # Optional image
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    user = relationship("User", backref="student_queries")
+    answers = relationship("QueryAnswer", back_populates="query", cascade="all, delete-orphan", order_by="QueryAnswer.created_at.asc()")
+
+
+class QueryAnswer(Base):
+    """Model for answers to student queries"""
+    __tablename__ = "query_answers"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    query_id = Column(UUID(as_uuid=True), ForeignKey("student_queries.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    answer_text = Column(Text, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    query = relationship("StudentQuery", back_populates="answers")
+    user = relationship("User", backref="query_answers")

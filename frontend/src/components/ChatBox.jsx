@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, memo } from 'react';
 import { askQuestion, getHistory } from '../api';
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
@@ -6,12 +6,26 @@ import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
 import './ChatBox.css';
 
+const MessageBubble = memo(({ message }) => {
+    return (
+        <div className="message-text markdown-body">
+            <ReactMarkdown
+                remarkPlugins={[remarkMath]}
+                rehypePlugins={[rehypeKatex]}
+            >
+                {message.text}
+            </ReactMarkdown>
+        </div>
+    );
+});
+
 function ChatBox() {
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
     const [loadingHistory, setLoadingHistory] = useState(true);
     const messagesEndRef = useRef(null);
+    const messagesContainerRef = useRef(null);
 
     // Load history on mount
     useEffect(() => {
@@ -43,7 +57,12 @@ function ChatBox() {
     };
 
     const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        if (messagesContainerRef.current) {
+            messagesContainerRef.current.scrollTo({
+                top: messagesContainerRef.current.scrollHeight,
+                behavior: 'smooth'
+            });
+        }
     };
 
     useEffect(() => {
@@ -97,7 +116,7 @@ function ChatBox() {
     return (
         <div className="chatbox-container">
             {/* Messages Area */}
-            <div className="messages-area">
+            <div className="messages-area" ref={messagesContainerRef}>
                 {loadingHistory ? (
                     <div className="loading-center">
                         <div className="spinner"></div>
@@ -118,16 +137,9 @@ function ChatBox() {
                             >
                                 <div className="message-avatar">
                                     {msg.type === 'user' ? '👤' : '🤖'}
-                                </div>
+                                </div> {/* Added missing closing div for message-avatar */}
                                 <div className="message-content">
-                                    <div className="message-text markdown-body">
-                                        <ReactMarkdown
-                                            remarkPlugins={[remarkMath]}
-                                            rehypePlugins={[rehypeKatex]}
-                                        >
-                                            {msg.text}
-                                        </ReactMarkdown>
-                                    </div>
+                                    <MessageBubble message={msg} />
                                     {msg.sources && msg.sources.length > 0 && (
                                         <div className="message-sources">
                                             <small>

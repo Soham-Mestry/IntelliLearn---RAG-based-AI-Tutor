@@ -76,6 +76,32 @@ export const getHistory = async () => {
     return response.data;
 };
 
+// ============= Student Queries API =============
+
+export const createStudentQuery = async (formData) => {
+    const response = await api.post('/student/queries', formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data',
+        },
+    });
+    return response.data;
+};
+
+export const getStudentQueries = async () => {
+    const response = await api.get('/student/queries');
+    return response.data;
+};
+
+export const getQueryDetails = async (queryId) => {
+    const response = await api.get(`/student/queries/${queryId}`);
+    return response.data;
+};
+
+export const postQueryAnswer = async (queryId, answerText) => {
+    const response = await api.post(`/student/queries/${queryId}/answers`, { answer_text: answerText });
+    return response.data;
+};
+
 // ============= Admin API =============
 
 export const createSubject = async (name, semester) => {

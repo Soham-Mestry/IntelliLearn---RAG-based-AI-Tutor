@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import ChatBox from '../components/ChatBox';
+import AskQueryDashboard from '../components/AskQueryDashboard';
 import { getSubjects } from '../api';
 import './Student.css';
 
 function Student() {
     const [selectedSemester, setSelectedSemester] = useState(1);
+    const [activeTab, setActiveTab] = useState('ai'); // 'ai' or 'query'
     const [subjects, setSubjects] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
@@ -74,9 +76,30 @@ function Student() {
                     </div>
                 </div>
 
-                {/* Main Content - Chat Area */}
+                {/* Main Content - Dynamic Area */}
                 <div className="main-content">
-                    <ChatBox />
+                    <div className="student-tabs">
+                        <button 
+                            className={`tab-btn ${activeTab === 'ai' ? 'active' : ''}`}
+                            onClick={() => setActiveTab('ai')}
+                        >
+                            <span className="tab-icon">🤖</span> AI Tutor
+                        </button>
+                        <button 
+                            className={`tab-btn ${activeTab === 'query' ? 'active' : ''}`}
+                            onClick={() => setActiveTab('query')}
+                        >
+                            <span className="tab-icon">❓</span> Ask Query
+                        </button>
+                    </div>
+
+                    <div className="tab-content">
+                        {activeTab === 'ai' ? (
+                            <ChatBox />
+                        ) : (
+                            <AskQueryDashboard />
+                        )}
+                    </div>
                 </div>
             </div>
         </div>
