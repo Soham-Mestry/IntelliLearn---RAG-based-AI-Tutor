@@ -38,7 +38,7 @@ function Register() {
         try {
             await register(formData.name, formData.email, formData.password);
             // Redirect to login after successful registration
-            navigate('/', { state: { message: 'Registration successful! Please login.' } });
+            navigate('/login', { state: { message: 'Registration successful! Please login.' } });
         } catch (err) {
             setError(err.message);
         } finally {
@@ -106,7 +106,7 @@ function Register() {
                 </form>
 
                 <p className="text-center mt-3">
-                    Already have an account? <Link to="/" className="auth-link">Login</Link>
+                    Already have an account? <Link to="/login" className="auth-link">Login</Link>
                 </p>
             </div>
         </div>

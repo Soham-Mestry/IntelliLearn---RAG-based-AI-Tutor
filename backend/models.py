@@ -41,6 +41,7 @@ class Subject(Base):
     
     # Relationship
     notes = relationship("Note", back_populates="subject", cascade="all, delete-orphan")
+    qna_logs = relationship("QnALog", back_populates="subject")
     
     # Constraint to ensure semester is between 1 and 8
     __table_args__ = (
@@ -82,12 +83,14 @@ class QnALog(Base):
     
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    subject_id = Column(UUID(as_uuid=True), ForeignKey("subjects.id", ondelete="SET NULL"), nullable=True)
     question = Column(Text, nullable=False)
     answer = Column(Text, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
     
-    # Relationship
+    # Relationships
     user = relationship("User", back_populates="qna_logs")
+    subject = relationship("Subject", back_populates="qna_logs")
 
 
 class StudentQuery(Base):
@@ -114,6 +117,7 @@ class QueryAnswer(Base):
     query_id = Column(UUID(as_uuid=True), ForeignKey("student_queries.id", ondelete="CASCADE"), nullable=False)
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     answer_text = Column(Text, nullable=False)
+    image_path = Column(String(500), nullable=True)  # Optional image attachment
     created_at = Column(DateTime, default=datetime.utcnow)
     
     # Relationships

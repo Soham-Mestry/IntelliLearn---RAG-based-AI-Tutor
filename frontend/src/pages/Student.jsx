@@ -11,6 +11,7 @@ function Student() {
     const [subjects, setSubjects] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const [selectedSubject, setSelectedSubject] = useState(null); // { id, name }
 
     useEffect(() => {
         fetchSubjects();
@@ -19,6 +20,7 @@ function Student() {
     const fetchSubjects = async () => {
         setLoading(true);
         setError('');
+        setSelectedSubject(null); // Reset subject when semester changes
         try {
             const data = await getSubjects(selectedSemester);
             setSubjects(data);
@@ -27,6 +29,10 @@ function Student() {
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleSubjectClick = (subject) => {
+        setSelectedSubject(subject);
     };
 
     const semesters = [1, 2, 3, 4, 5, 6, 7, 8];
@@ -65,8 +71,15 @@ function Student() {
                         ) : subjects.length > 0 ? (
                             <div className="subject-list">
                                 {subjects.map((subject) => (
-                                    <div key={subject.id} className="subject-item">
+                                    <div
+                                        key={subject.id}
+                                        className={`subject-item ${selectedSubject?.id === subject.id ? 'subject-item-active' : ''}`}
+                                        onClick={() => handleSubjectClick(subject)}
+                                    >
                                         <span>{subject.name}</span>
+                                        {selectedSubject?.id === subject.id && (
+                                            <span className="subject-active-indicator">●</span>
+                                        )}
                                     </div>
                                 ))}
                             </div>
@@ -95,7 +108,10 @@ function Student() {
 
                     <div className="tab-content">
                         {activeTab === 'ai' ? (
-                            <ChatBox />
+                            <ChatBox
+                                subjectId={selectedSubject?.id || null}
+                                subjectName={selectedSubject?.name || null}
+                            />
                         ) : (
                             <AskQueryDashboard />
                         )}
@@ -107,3 +123,4 @@ function Student() {
 }
 
 export default Student;
+

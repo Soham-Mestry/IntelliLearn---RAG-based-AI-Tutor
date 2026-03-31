@@ -19,7 +19,7 @@ const MessageBubble = memo(({ message }) => {
     );
 });
 
-function ChatBox() {
+function ChatBox({ subjectId, subjectName }) {
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
@@ -27,14 +27,16 @@ function ChatBox() {
     const messagesEndRef = useRef(null);
     const messagesContainerRef = useRef(null);
 
-    // Load history on mount
+    // Reload history when subjectId changes
     useEffect(() => {
+        setMessages([]);
+        setLoadingHistory(true);
         loadHistory();
-    }, []);
+    }, [subjectId]);
 
     const loadHistory = async () => {
         try {
-            const history = await getHistory();
+            const history = await getHistory(subjectId || null);
             // Convert history to message format (reverse to show oldest first)
             const historyMessages = history.reverse().flatMap((item) => [
                 {
@@ -83,7 +85,7 @@ function ChatBox() {
         setLoading(true);
 
         try {
-            const response = await askQuestion(userMessage.text);
+            const response = await askQuestion(userMessage.text, subjectId || null);
 
             const aiMessage = {
                 type: 'ai',
@@ -113,8 +115,29 @@ function ChatBox() {
         }
     };
 
+    // Show a "select subject" prompt when no subject is chosen
+    if (!subjectId) {
+        return (
+            <div className="chatbox-container">
+                <div className="messages-area">
+                    <div className="empty-chat">
+                        <div className="empty-icon">📚</div>
+                        <h3>Select a Subject</h3>
+                        <p>Choose a subject from the sidebar to start chatting with the AI tutor about that topic.</p>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="chatbox-container">
+            {/* Subject Chat Header */}
+            <div className="chat-subject-header">
+                <span className="chat-subject-dot"></span>
+                <span className="chat-subject-name">{subjectName || 'Subject Chat'}</span>
+            </div>
+
             {/* Messages Area */}
             <div className="messages-area" ref={messagesContainerRef}>
                 {loadingHistory ? (
@@ -126,7 +149,7 @@ function ChatBox() {
                     <div className="empty-chat">
                         <div className="empty-icon">💬</div>
                         <h3>Start a conversation</h3>
-                        <p>Ask any question about your course materials!</p>
+                        <p>Ask any question about <strong>{subjectName}</strong>!</p>
                     </div>
                 ) : (
                     <>
@@ -137,7 +160,7 @@ function ChatBox() {
                             >
                                 <div className="message-avatar">
                                     {msg.type === 'user' ? '👤' : '🤖'}
-                                </div> {/* Added missing closing div for message-avatar */}
+                                </div>
                                 <div className="message-content">
                                     <MessageBubble message={msg} />
                                     {msg.sources && msg.sources.length > 0 && (
@@ -177,7 +200,7 @@ function ChatBox() {
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     onKeyPress={handleKeyPress}
-                    placeholder="Type your question here..."
+                    placeholder={`Ask about ${subjectName}...`}
                     disabled={loading}
                     rows={1}
                 />

@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { isAuthenticated, getRole } from './auth';
+import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Student from './pages/Student';
@@ -8,7 +9,7 @@ import Admin from './pages/Admin';
 // Protected Route component
 function ProtectedRoute({ children, requireRole }) {
     if (!isAuthenticated()) {
-        return <Navigate to="/" replace />;
+        return <Navigate to="/login" replace />;
     }
 
     if (requireRole && getRole() !== requireRole) {
@@ -25,7 +26,8 @@ function App() {
         <Router>
             <Routes>
                 {/* Public routes */}
-                <Route path="/" element={<Login />} />
+                <Route path="/" element={<Home />} />
+                <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
 
                 {/* Protected routes */}
@@ -47,7 +49,7 @@ function App() {
                 />
 
                 {/* Catch all - redirect to login */}
-                <Route path="*" element={<Navigate to="/" replace />} />
+                <Route path="*" element={<Navigate to="/login" replace />} />
             </Routes>
         </Router>
     );

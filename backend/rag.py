@@ -133,9 +133,10 @@ def process_and_embed_document(filepath: str, note_id: str, db: Session) -> int:
     return chunk_count
 
 
-def similarity_search(query: str, db: Session, top_k: int = 3) -> list:
+def similarity_search(query: str, db: Session, top_k: int = 3, subject_id: str = None) -> list:
     """
     Perform similarity search using pgvector.
+    Optionally filters by subject_id to scope results to a specific subject.
     Returns top_k most similar text chunks with their context.
     """
     # Generate query embedding
@@ -144,25 +145,42 @@ def similarity_search(query: str, db: Session, top_k: int = 3) -> list:
     # Convert to PostgreSQL array format string
     embedding_str = "[" + ",".join(map(str, query_embedding)) + "]"
     
-    # Perform vector similarity search using pgvector
-    # Using <=> operator for cosine distance
-    sql_query = text("""
-        SELECT 
-            e.text_chunk,
-            n.filename,
-            s.name as subject_name,
-            (1 - (e.embedding <=> CAST(:query_embedding AS vector))) as similarity
-        FROM embeddings e
-        JOIN notes n ON e.note_id = n.id
-        JOIN subjects s ON n.subject_id = s.id
-        ORDER BY e.embedding <=> CAST(:query_embedding AS vector)
-        LIMIT :top_k
-    """)
-    
-    result = db.execute(
-        sql_query,
-        {"query_embedding": embedding_str, "top_k": top_k}
-    )
+    # Build SQL query with optional subject filter
+    if subject_id:
+        sql_query = text("""
+            SELECT 
+                e.text_chunk,
+                n.filename,
+                s.name as subject_name,
+                (1 - (e.embedding <=> CAST(:query_embedding AS vector))) as similarity
+            FROM embeddings e
+            JOIN notes n ON e.note_id = n.id
+            JOIN subjects s ON n.subject_id = s.id
+            WHERE s.id = CAST(:subject_id AS UUID)
+            ORDER BY e.embedding <=> CAST(:query_embedding AS vector)
+            LIMIT :top_k
+        """)
+        result = db.execute(
+            sql_query,
+            {"query_embedding": embedding_str, "top_k": top_k, "subject_id": subject_id}
+        )
+    else:
+        sql_query = text("""
+            SELECT 
+                e.text_chunk,
+                n.filename,
+                s.name as subject_name,
+                (1 - (e.embedding <=> CAST(:query_embedding AS vector))) as similarity
+            FROM embeddings e
+            JOIN notes n ON e.note_id = n.id
+            JOIN subjects s ON n.subject_id = s.id
+            ORDER BY e.embedding <=> CAST(:query_embedding AS vector)
+            LIMIT :top_k
+        """)
+        result = db.execute(
+            sql_query,
+            {"query_embedding": embedding_str, "top_k": top_k}
+        )
     
     results = []
     for row in result:
@@ -252,13 +270,14 @@ Now, provide a comprehensive answer to the student's question based on the conte
     return prompt
 
 
-def ask_question(question: str, db: Session) -> dict:
+def ask_question(question: str, db: Session, subject_id: str = None) -> dict:
     """
     Answer a question using RAG pipeline.
+    Optionally scoped to a specific subject.
     Returns answer and the sources used.
     """
-    # Perform similarity search
-    search_results = similarity_search(question, db, top_k=3)
+    # Perform similarity search (scoped to subject if provided)
+    search_results = similarity_search(question, db, top_k=3, subject_id=subject_id)
     
     # Check if we have any results
     if not search_results or len(search_results) == 0:

@@ -66,13 +66,16 @@ export const getSubjects = async (semester) => {
     return response.data;
 };
 
-export const askQuestion = async (question) => {
-    const response = await api.post('/ask', { question });
+export const askQuestion = async (question, subjectId = null) => {
+    const payload = { question };
+    if (subjectId) payload.subject_id = subjectId;
+    const response = await api.post('/ask', payload);
     return response.data;
 };
 
-export const getHistory = async () => {
-    const response = await api.get('/history');
+export const getHistory = async (subjectId = null) => {
+    const params = subjectId ? { subject_id: subjectId } : {};
+    const response = await api.get('/history', { params });
     return response.data;
 };
 
@@ -97,8 +100,22 @@ export const getQueryDetails = async (queryId) => {
     return response.data;
 };
 
-export const postQueryAnswer = async (queryId, answerText) => {
-    const response = await api.post(`/student/queries/${queryId}/answers`, { answer_text: answerText });
+export const postQueryAnswer = async (queryId, formData) => {
+    const response = await api.post(`/student/queries/${queryId}/answers`, formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data',
+        },
+    });
+    return response.data;
+};
+
+export const deleteQuery = async (queryId) => {
+    const response = await api.delete(`/student/queries/${queryId}`);
+    return response.data;
+};
+
+export const deleteAnswer = async (queryId, answerId) => {
+    const response = await api.delete(`/student/queries/${queryId}/answers/${answerId}`);
     return response.data;
 };
 
@@ -129,6 +146,28 @@ export const getAllNotes = async () => {
 
 export const deleteNote = async (noteId) => {
     const response = await api.delete(`/admin/note/${noteId}`);
+    return response.data;
+};
+
+export const deleteSubject = async (subjectId) => {
+    const response = await api.delete(`/admin/subject/${subjectId}`);
+    return response.data;
+};
+
+// ============= Admin Query Management API =============
+
+export const getAdminQueries = async () => {
+    const response = await api.get('/admin/queries');
+    return response.data;
+};
+
+export const adminDeleteQuery = async (queryId) => {
+    const response = await api.delete(`/admin/queries/${queryId}`);
+    return response.data;
+};
+
+export const adminDeleteAnswer = async (queryId, answerId) => {
+    const response = await api.delete(`/admin/queries/${queryId}/answers/${answerId}`);
     return response.data;
 };
 

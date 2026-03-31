@@ -42,6 +42,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.middleware("http")
+async def add_cors_headers(request, call_next):
+    response = await call_next(request)
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Credentials"] = "true"
+    response.headers["Access-Control-Allow-Headers"] = "*"
+    response.headers["Access-Control-Allow-Methods"] = "*"
+    return response
+
 # Create uploads directory if not exists
 UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
@@ -103,6 +112,7 @@ class SubjectResponse(BaseModel):
 
 class QuestionRequest(BaseModel):
     question: str
+    subject_id: Optional[str] = None
     
     @validator('question')
     def question_not_empty(cls, v):
@@ -135,8 +145,10 @@ class NoteResponse(BaseModel):
 
 class QueryAnswerResponse(BaseModel):
     id: str
+    user_id: str
     user_name: str
     answer_text: str
+    image_path: Optional[str] = None
     created_at: str
     
     class Config:
@@ -144,6 +156,7 @@ class QueryAnswerResponse(BaseModel):
 
 class StudentQueryResponse(BaseModel):
     id: str
+    user_id: str
     user_name: str
     title: str
     description: str
@@ -158,14 +171,6 @@ class StudentQueryDetailResponse(StudentQueryResponse):
     answers: List[QueryAnswerResponse] = []
 
 
-class AnswerCreate(BaseModel):
-    answer_text: str
-    
-    @validator('answer_text')
-    def answer_not_empty(cls, v):
-        if not v.strip():
-            raise ValueError('Answer cannot be empty')
-        return v
 
 
 # ============= Startup Event =============
@@ -304,13 +309,14 @@ def ask_ai_question(
     Ask a question to the AI tutor using RAG.
     Saves question and answer to history.
     """
-    # Get answer from RAG pipeline
-    result = ask_question(question_data.question, db)
+    # Get answer from RAG pipeline (scoped to subject if provided)
+    result = ask_question(question_data.question, db, subject_id=question_data.subject_id)
     
     # Save to QnA log
     qna_log = QnALog(
         id=uuid.uuid4(),
         user_id=current_user.id,
+        subject_id=question_data.subject_id,
         question=question_data.question,
         answer=result["answer"]
     )
@@ -325,17 +331,21 @@ def ask_ai_question(
 
 @app.get("/history", response_model=List[QnAHistoryResponse])
 def get_user_history(
+    subject_id: Optional[str] = None,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
     Get current user's question history.
+    Optionally filtered by subject_id.
     Returns most recent questions first.
     """
-    history = db.query(QnALog)\
-        .filter(QnALog.user_id == current_user.id)\
-        .order_by(QnALog.created_at.desc())\
-        .all()
+    query = db.query(QnALog).filter(QnALog.user_id == current_user.id)
+    
+    if subject_id:
+        query = query.filter(QnALog.subject_id == subject_id)
+    
+    history = query.order_by(QnALog.created_at.desc()).all()
     
     return [
         {
@@ -399,6 +409,7 @@ async def create_query(
     
     return {
         "id": str(new_query.id),
+        "user_id": str(current_user.id),
         "user_name": current_user.name,
         "title": new_query.title,
         "description": new_query.description,
@@ -419,6 +430,7 @@ def get_queries(
     return [
         {
             "id": str(q.id),
+            "user_id": str(q.user_id),
             "user_name": q.user.name,
             "title": q.title,
             "description": q.description,
@@ -444,6 +456,7 @@ def get_query_details(
         
     return {
         "id": str(q.id),
+        "user_id": str(q.user_id),
         "user_name": q.user.name,
         "title": q.title,
         "description": q.description,
@@ -453,8 +466,10 @@ def get_query_details(
         "answers": [
             {
                 "id": str(a.id),
+                "user_id": str(a.user_id),
                 "user_name": a.user.name,
                 "answer_text": a.answer_text,
+                "image_path": a.image_path,
                 "created_at": a.created_at.isoformat()
             }
             for a in q.answers
@@ -462,22 +477,47 @@ def get_query_details(
     }
 
 @app.post("/student/queries/{query_id}/answers", response_model=QueryAnswerResponse, status_code=status.HTTP_201_CREATED)
-def post_query_answer(
+async def post_query_answer(
     query_id: str,
-    answer_data: AnswerCreate,
+    answer_text: str = Form(...),
+    image: Optional[UploadFile] = File(None),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Post an answer to a query"""
+    """Post an answer to a query with optional image attachment"""
+    if not answer_text.strip():
+        raise HTTPException(status_code=400, detail="Answer text cannot be empty")
+    
     query = db.query(StudentQuery).filter(StudentQuery.id == query_id).first()
     if not query:
         raise HTTPException(status_code=404, detail="Query not found")
-        
+    
+    image_path = None
+    if image and image.filename:
+        allowed_extensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp']
+        file_extension = os.path.splitext(image.filename)[1].lower()
+        if file_extension not in allowed_extensions:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Image type not supported. Allowed: {', '.join(allowed_extensions)}"
+            )
+        unique_filename = f"answer_{uuid.uuid4()}{file_extension}"
+        image_path = os.path.join(UPLOAD_DIR, unique_filename)
+        try:
+            with open(image_path, "wb") as buffer:
+                shutil.copyfileobj(image.file, buffer)
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Error saving image: {str(e)}"
+            )
+    
     new_answer = QueryAnswer(
         id=uuid.uuid4(),
         query_id=query.id,
         user_id=current_user.id,
-        answer_text=answer_data.answer_text
+        answer_text=answer_text,
+        image_path=image_path
     )
     db.add(new_answer)
     db.commit()
@@ -485,10 +525,79 @@ def post_query_answer(
     
     return {
         "id": str(new_answer.id),
+        "user_id": str(current_user.id),
         "user_name": current_user.name,
         "answer_text": new_answer.answer_text,
+        "image_path": new_answer.image_path,
         "created_at": new_answer.created_at.isoformat()
     }
+
+
+@app.delete("/student/queries/{query_id}", status_code=status.HTTP_200_OK)
+def delete_query(
+    query_id: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Delete a query and all its answers. Only the query owner can delete."""
+    query = db.query(StudentQuery).filter(StudentQuery.id == query_id).first()
+    if not query:
+        raise HTTPException(status_code=404, detail="Query not found")
+    
+    if str(query.user_id) != str(current_user.id):
+        raise HTTPException(status_code=403, detail="You can only delete your own queries")
+    
+    # Delete associated image files (query image + answer images)
+    if query.image_path and os.path.exists(query.image_path):
+        try:
+            os.remove(query.image_path)
+        except Exception:
+            pass
+    
+    for answer in query.answers:
+        if answer.image_path and os.path.exists(answer.image_path):
+            try:
+                os.remove(answer.image_path)
+            except Exception:
+                pass
+    
+    # Delete query (answers cascade-deleted via relationship)
+    db.delete(query)
+    db.commit()
+    
+    return {"message": "Query deleted successfully", "query_id": query_id}
+
+
+@app.delete("/student/queries/{query_id}/answers/{answer_id}", status_code=status.HTTP_200_OK)
+def delete_answer(
+    query_id: str,
+    answer_id: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Delete an answer. Only the answer author can delete."""
+    answer = db.query(QueryAnswer).filter(
+        QueryAnswer.id == answer_id,
+        QueryAnswer.query_id == query_id
+    ).first()
+    
+    if not answer:
+        raise HTTPException(status_code=404, detail="Answer not found")
+    
+    if str(answer.user_id) != str(current_user.id):
+        raise HTTPException(status_code=403, detail="You can only delete your own answers")
+    
+    # Delete associated image file
+    if answer.image_path and os.path.exists(answer.image_path):
+        try:
+            os.remove(answer.image_path)
+        except Exception:
+            pass
+    
+    db.delete(answer)
+    db.commit()
+    
+    return {"message": "Answer deleted successfully", "answer_id": answer_id}
 
 
 # ============= Admin Routes (Protected) =============
@@ -656,6 +765,151 @@ def delete_note(
         "message": "Note deleted successfully",
         "note_id": note_id
     }
+
+
+@app.delete("/admin/subject/{subject_id}", status_code=status.HTTP_200_OK)
+def delete_subject(
+    subject_id: str,
+    current_user: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    """
+    Delete a subject and all associated data (notes, embeddings, files, QnA logs).
+    Admin only. Cascades through all related records.
+    """
+    subject = db.query(Subject).filter(Subject.id == subject_id).first()
+
+    if not subject:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Subject not found"
+        )
+
+    # Delete physical files for all notes under this subject
+    for note in subject.notes:
+        if os.path.exists(note.filepath):
+            try:
+                os.remove(note.filepath)
+            except Exception as e:
+                print(f"Warning: Could not delete file {note.filepath}: {str(e)}")
+
+    # Delete the subject (notes & embeddings cascade-deleted via ORM relationships,
+    # QnA logs have ondelete="SET NULL" so they keep the log but lose the subject reference)
+    db.delete(subject)
+    db.commit()
+
+    return {
+        "message": "Subject and all associated data deleted successfully",
+        "subject_id": subject_id
+    }
+
+
+# ============= Admin Query Management Routes =============
+
+@app.get("/admin/queries", response_model=List[StudentQueryDetailResponse])
+def admin_get_all_queries(
+    current_user: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    """
+    Get all student queries with their answers.
+    Admin only. Returns queries sorted newest first.
+    """
+    from sqlalchemy.orm import joinedload
+    queries = db.query(StudentQuery).options(
+        joinedload(StudentQuery.user),
+        joinedload(StudentQuery.answers).joinedload(QueryAnswer.user)
+    ).order_by(StudentQuery.created_at.desc()).all()
+
+    return [
+        {
+            "id": str(q.id),
+            "user_id": str(q.user_id),
+            "user_name": q.user.name,
+            "title": q.title,
+            "description": q.description,
+            "image_path": q.image_path,
+            "created_at": q.created_at.isoformat(),
+            "answer_count": len(q.answers),
+            "answers": [
+                {
+                    "id": str(a.id),
+                    "user_id": str(a.user_id),
+                    "user_name": a.user.name,
+                    "answer_text": a.answer_text,
+                    "image_path": a.image_path,
+                    "created_at": a.created_at.isoformat()
+                }
+                for a in q.answers
+            ]
+        }
+        for q in queries
+    ]
+
+
+@app.delete("/admin/queries/{query_id}", status_code=status.HTTP_200_OK)
+def admin_delete_query(
+    query_id: str,
+    current_user: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    """
+    Delete any student query and all its answers.
+    Admin only — no ownership check.
+    """
+    query = db.query(StudentQuery).filter(StudentQuery.id == query_id).first()
+    if not query:
+        raise HTTPException(status_code=404, detail="Query not found")
+
+    # Clean up image files
+    if query.image_path and os.path.exists(query.image_path):
+        try:
+            os.remove(query.image_path)
+        except Exception:
+            pass
+
+    for answer in query.answers:
+        if answer.image_path and os.path.exists(answer.image_path):
+            try:
+                os.remove(answer.image_path)
+            except Exception:
+                pass
+
+    db.delete(query)
+    db.commit()
+
+    return {"message": "Query deleted successfully by admin", "query_id": query_id}
+
+
+@app.delete("/admin/queries/{query_id}/answers/{answer_id}", status_code=status.HTTP_200_OK)
+def admin_delete_answer(
+    query_id: str,
+    answer_id: str,
+    current_user: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    """
+    Delete any answer from a query.
+    Admin only — no ownership check.
+    """
+    answer = db.query(QueryAnswer).filter(
+        QueryAnswer.id == answer_id,
+        QueryAnswer.query_id == query_id
+    ).first()
+
+    if not answer:
+        raise HTTPException(status_code=404, detail="Answer not found")
+
+    if answer.image_path and os.path.exists(answer.image_path):
+        try:
+            os.remove(answer.image_path)
+        except Exception:
+            pass
+
+    db.delete(answer)
+    db.commit()
+
+    return {"message": "Answer deleted successfully by admin", "answer_id": answer_id}
 
 
 if __name__ == "__main__":

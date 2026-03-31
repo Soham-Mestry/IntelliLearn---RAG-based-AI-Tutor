@@ -49,28 +49,29 @@ function Login() {
 
     return (
         <div className="auth-page">
-            <div className="auth-card">
-                <h1 className="auth-title">AI Tutor Platform</h1>
+            <div className="auth-card animate-fade-in">
+                <h1 className="auth-title">Welcome Back</h1>
+                <p className="auth-subtitle">Sign in to your AI Tutor account</p>
 
                 {error && (
                     <div className="alert alert-error">{error}</div>
                 )}
 
-                <form onSubmit={handleSubmit}>
+                <form onSubmit={handleSubmit} className="flex-col gap-2">
                     <div className="form-group">
-                        <label className="form-label">Email</label>
+                        <label className="form-label">Email Address</label>
                         <input
                             type="email"
                             name="email"
                             className="form-input"
                             value={formData.email}
                             onChange={handleChange}
-                            placeholder="Enter your email"
+                            placeholder="name@example.com"
                             disabled={loading}
                         />
                     </div>
 
-                    <div className="form-group">
+                    <div className="form-group" style={{ marginBottom: '24px' }}>
                         <label className="form-label">Password</label>
                         <input
                             type="password"
@@ -86,15 +87,15 @@ function Login() {
                     <button
                         type="submit"
                         className="btn btn-primary"
-                        style={{ width: '100%' }}
+                        style={{ width: '100%', padding: '14px' }}
                         disabled={loading}
                     >
-                        {loading ? 'Logging in...' : 'Login'}
+                        {loading ? 'Signing in...' : 'Sign In'}
                     </button>
                 </form>
 
-                <p className="text-center mt-3">
-                    Don't have an account? <Link to="/register" className="auth-link">Register</Link>
+                <p className="text-center mt-3 text-muted">
+                    Don't have an account? <Link to="/register" className="auth-link">Create one</Link>
                 </p>
             </div>
         </div>
