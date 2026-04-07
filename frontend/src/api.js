@@ -171,6 +171,36 @@ export const adminDeleteAnswer = async (queryId, answerId) => {
     return response.data;
 };
 
+// ============= Report API =============
+
+export const submitReport = async (contentType, contentId, reason) => {
+    const formData = new FormData();
+    formData.append('content_type', contentType);
+    formData.append('content_id', contentId);
+    formData.append('reason', reason);
+    const response = await api.post('/student/reports', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+};
+
+// ============= Admin Report API =============
+
+export const getAdminReports = async (statusFilter = null) => {
+    const params = statusFilter ? { status_filter: statusFilter } : {};
+    const response = await api.get('/admin/reports', { params });
+    return response.data;
+};
+
+export const updateReportStatus = async (reportId, newStatus) => {
+    const formData = new FormData();
+    formData.append('new_status', newStatus);
+    const response = await api.put(`/admin/reports/${reportId}`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+};
+
 export const getAllSubjects = async () => {
     // Get all subjects across all semesters for admin
     const allSubjects = [];

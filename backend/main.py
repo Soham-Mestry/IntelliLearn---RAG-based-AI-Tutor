@@ -15,7 +15,7 @@ import uuid
 
 # Local imports
 from database import get_db, init_db
-from models import User, Subject, Note, QnALog, StudentQuery, QueryAnswer
+from models import User, Subject, Note, QnALog, StudentQuery, QueryAnswer, Report
 from auth import (
     hash_password,
     verify_password,
@@ -169,6 +169,26 @@ class StudentQueryResponse(BaseModel):
 
 class StudentQueryDetailResponse(StudentQueryResponse):
     answers: List[QueryAnswerResponse] = []
+
+
+class ReportResponse(BaseModel):
+    id: str
+    reporter_id: str
+    reporter_name: str
+    content_type: str
+    content_id: str
+    reason: str
+    status: str
+    created_at: str
+    resolved_at: Optional[str] = None
+    # Enriched content preview
+    content_title: Optional[str] = None
+    content_text: Optional[str] = None
+    content_author: Optional[str] = None
+    
+    class Config:
+        from_attributes = True
+
 
 
 
@@ -600,6 +620,60 @@ def delete_answer(
     return {"message": "Answer deleted successfully", "answer_id": answer_id}
 
 
+# ============= Report Routes (Student) =============
+
+@app.post("/student/reports", status_code=status.HTTP_201_CREATED)
+def create_report(
+    content_type: str = Form(...),
+    content_id: str = Form(...),
+    reason: str = Form(...),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Report a query or answer.
+    content_type must be 'query' or 'answer'.
+    """
+    if content_type not in ('query', 'answer'):
+        raise HTTPException(status_code=400, detail="content_type must be 'query' or 'answer'")
+    
+    if not reason.strip():
+        raise HTTPException(status_code=400, detail="Report reason cannot be empty")
+    
+    # Verify the content exists
+    if content_type == 'query':
+        item = db.query(StudentQuery).filter(StudentQuery.id == content_id).first()
+        if not item:
+            raise HTTPException(status_code=404, detail="Query not found")
+    else:
+        item = db.query(QueryAnswer).filter(QueryAnswer.id == content_id).first()
+        if not item:
+            raise HTTPException(status_code=404, detail="Answer not found")
+    
+    # Check if user already reported this content
+    existing = db.query(Report).filter(
+        Report.reporter_id == current_user.id,
+        Report.content_type == content_type,
+        Report.content_id == content_id
+    ).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="You have already reported this content")
+    
+    new_report = Report(
+        id=uuid.uuid4(),
+        reporter_id=current_user.id,
+        content_type=content_type,
+        content_id=content_id,
+        reason=reason.strip(),
+        status="pending"
+    )
+    db.add(new_report)
+    db.commit()
+    
+    return {"message": "Report submitted successfully"}
+
+
+
 # ============= Admin Routes (Protected) =============
 
 @app.post("/admin/subject", response_model=SubjectResponse, status_code=status.HTTP_201_CREATED)
@@ -910,6 +984,90 @@ def admin_delete_answer(
     db.commit()
 
     return {"message": "Answer deleted successfully by admin", "answer_id": answer_id}
+
+
+# ============= Admin Report Management Routes =============
+
+@app.get("/admin/reports", response_model=List[ReportResponse])
+def admin_get_reports(
+    status_filter: Optional[str] = None,
+    current_user: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    """
+    Get all reports. Optionally filter by status ('pending', 'reviewed', 'dismissed').
+    Admin only.
+    """
+    from sqlalchemy.orm import joinedload
+    query = db.query(Report).options(joinedload(Report.reporter))
+    
+    if status_filter and status_filter in ('pending', 'reviewed', 'dismissed'):
+        query = query.filter(Report.status == status_filter)
+    
+    reports = query.order_by(Report.created_at.desc()).all()
+    
+    result = []
+    for r in reports:
+        # Enrich with content info
+        content_title = None
+        content_text = None
+        content_author = None
+        
+        if r.content_type == 'query':
+            q = db.query(StudentQuery).options(joinedload(StudentQuery.user)).filter(StudentQuery.id == r.content_id).first()
+            if q:
+                content_title = q.title
+                content_text = q.description[:200] if q.description else None
+                content_author = q.user.name
+        else:
+            a = db.query(QueryAnswer).options(joinedload(QueryAnswer.user)).filter(QueryAnswer.id == r.content_id).first()
+            if a:
+                content_text = a.answer_text[:200] if a.answer_text else None
+                content_author = a.user.name
+        
+        result.append({
+            "id": str(r.id),
+            "reporter_id": str(r.reporter_id),
+            "reporter_name": r.reporter.name,
+            "content_type": r.content_type,
+            "content_id": str(r.content_id),
+            "reason": r.reason,
+            "status": r.status,
+            "created_at": r.created_at.isoformat(),
+            "resolved_at": r.resolved_at.isoformat() if r.resolved_at else None,
+            "content_title": content_title,
+            "content_text": content_text,
+            "content_author": content_author,
+        })
+    
+    return result
+
+
+@app.put("/admin/reports/{report_id}")
+def admin_update_report_status(
+    report_id: str,
+    new_status: str = Form(...),
+    current_user: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    """
+    Update report status (reviewed/dismissed).
+    Admin only.
+    """
+    if new_status not in ('reviewed', 'dismissed'):
+        raise HTTPException(status_code=400, detail="Status must be 'reviewed' or 'dismissed'")
+    
+    report = db.query(Report).filter(Report.id == report_id).first()
+    if not report:
+        raise HTTPException(status_code=404, detail="Report not found")
+    
+    from datetime import datetime
+    report.status = new_status
+    report.resolved_at = datetime.utcnow()
+    db.commit()
+    
+    return {"message": f"Report marked as {new_status}", "report_id": report_id}
+
 
 
 if __name__ == "__main__":

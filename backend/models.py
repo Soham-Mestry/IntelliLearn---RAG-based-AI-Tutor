@@ -2,7 +2,7 @@
 SQLAlchemy database models for AI Tutor Platform.
 All tables with proper relationships and constraints.
 """
-from sqlalchemy import Column, String, Integer, DateTime, ForeignKey, CheckConstraint, Text
+from sqlalchemy import Column, String, Integer, DateTime, ForeignKey, CheckConstraint, Text, Enum
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from pgvector.sqlalchemy import Vector
@@ -123,3 +123,25 @@ class QueryAnswer(Base):
     # Relationships
     query = relationship("StudentQuery", back_populates="answers")
     user = relationship("User", backref="query_answers")
+
+
+class Report(Base):
+    """Model for reports on queries or answers"""
+    __tablename__ = "reports"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    reporter_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    content_type = Column(String(20), nullable=False)  # 'query' or 'answer'
+    content_id = Column(UUID(as_uuid=True), nullable=False)  # ID of the reported query or answer
+    reason = Column(Text, nullable=False)
+    status = Column(String(20), nullable=False, default="pending")  # 'pending', 'reviewed', 'dismissed'
+    created_at = Column(DateTime, default=datetime.utcnow)
+    resolved_at = Column(DateTime, nullable=True)
+    
+    # Relationships
+    reporter = relationship("User", backref="reports")
+    
+    __table_args__ = (
+        CheckConstraint("content_type IN ('query', 'answer')", name="check_report_content_type"),
+        CheckConstraint("status IN ('pending', 'reviewed', 'dismissed')", name="check_report_status"),
+    )

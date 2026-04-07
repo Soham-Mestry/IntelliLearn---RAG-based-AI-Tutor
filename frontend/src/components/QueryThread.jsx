@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { getQueryDetails, postQueryAnswer, deleteQuery, deleteAnswer } from '../api';
+import { getQueryDetails, postQueryAnswer, deleteQuery, deleteAnswer, submitReport } from '../api';
 import { getUser } from '../auth';
 
 function QueryThread({ queryId, onBack }) {
@@ -15,6 +15,12 @@ function QueryThread({ queryId, onBack }) {
     // Delete confirmation state
     const [deleteModal, setDeleteModal] = useState({ show: false, type: '', id: '' });
     const [deleting, setDeleting] = useState(false);
+
+    // Report modal state
+    const [reportModal, setReportModal] = useState({ show: false, type: '', id: '' });
+    const [reportReason, setReportReason] = useState('');
+    const [submittingReport, setSubmittingReport] = useState(false);
+    const [reportSuccess, setReportSuccess] = useState('');
 
     const fileInputRef = useRef(null);
     const currentUser = getUser();
@@ -87,6 +93,36 @@ function QueryThread({ queryId, onBack }) {
         }
     };
 
+    // Report handlers
+    const openReportModal = (type, id) => {
+        setReportModal({ show: true, type, id });
+        setReportReason('');
+        setReportSuccess('');
+    };
+
+    const closeReportModal = () => {
+        setReportModal({ show: false, type: '', id: '' });
+        setReportReason('');
+    };
+
+    const handleSubmitReport = async () => {
+        if (!reportReason.trim()) return;
+        setSubmittingReport(true);
+        try {
+            await submitReport(reportModal.type, reportModal.id, reportReason.trim());
+            setReportSuccess('Report submitted successfully!');
+            setTimeout(() => {
+                closeReportModal();
+                setReportSuccess('');
+            }, 1500);
+        } catch (err) {
+            setAnswerError(err.message || 'Failed to submit report');
+            closeReportModal();
+        } finally {
+            setSubmittingReport(false);
+        }
+    };
+
     if (loading) return <div className="loading-spinner">Loading thread...</div>;
     if (error) return <div className="alert alert-error">{error}</div>;
     if (!query) return null;
@@ -99,21 +135,37 @@ function QueryThread({ queryId, onBack }) {
                 <button className="btn btn-outline back-btn" onClick={onBack}>
                     ← Back to Threads
                 </button>
-                {isQueryOwner && (
-                    <button
-                        className="btn btn-danger-outline delete-query-btn"
-                        onClick={() => openDeleteModal('query', queryId)}
-                        title="Delete this query"
-                    >
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <polyline points="3 6 5 6 21 6" />
-                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                            <line x1="10" y1="11" x2="10" y2="17" />
-                            <line x1="14" y1="11" x2="14" y2="17" />
-                        </svg>
-                        Delete Query
-                    </button>
-                )}
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    {/* Report query button (visible to non-owners) */}
+                    {!isQueryOwner && (
+                        <button
+                            className="report-btn"
+                            onClick={() => openReportModal('query', queryId)}
+                            title="Report this query"
+                        >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
+                                <line x1="4" y1="22" x2="4" y2="15" />
+                            </svg>
+                            Report
+                        </button>
+                    )}
+                    {isQueryOwner && (
+                        <button
+                            className="btn btn-danger-outline delete-query-btn"
+                            onClick={() => openDeleteModal('query', queryId)}
+                            title="Delete this query"
+                        >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <polyline points="3 6 5 6 21 6" />
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                                <line x1="10" y1="11" x2="10" y2="17" />
+                                <line x1="14" y1="11" x2="14" y2="17" />
+                            </svg>
+                            Delete Query
+                        </button>
+                    )}
+                </div>
             </div>
 
             <div className="original-query-card">
@@ -152,6 +204,19 @@ function QueryThread({ queryId, onBack }) {
                                     <strong>{ans.user_name}</strong>
                                     <div className="ans-header-right">
                                         <span>{new Date(ans.created_at).toLocaleString()}</span>
+                                        {/* Report answer button */}
+                                        {!isAnswerOwner && (
+                                            <button
+                                                className="report-answer-btn"
+                                                onClick={() => openReportModal('answer', ans.id)}
+                                                title="Report this answer"
+                                            >
+                                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                    <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
+                                                    <line x1="4" y1="22" x2="4" y2="15" />
+                                                </svg>
+                                            </button>
+                                        )}
                                         {isAnswerOwner && (
                                             <button
                                                 className="delete-answer-btn"
@@ -263,6 +328,75 @@ function QueryThread({ queryId, onBack }) {
                                 {deleting ? 'Deleting...' : 'Yes, Delete'}
                             </button>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Report Modal */}
+            {reportModal.show && (
+                <div className="modal-overlay" onClick={closeReportModal}>
+                    <div className="modal-content report-modal" onClick={(e) => e.stopPropagation()}>
+                        {reportSuccess ? (
+                            <div className="report-success-view">
+                                <div className="report-success-icon">
+                                    <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                                        <polyline points="22 4 12 14.01 9 11.01" />
+                                    </svg>
+                                </div>
+                                <h3>Report Submitted</h3>
+                                <p>Thank you. Our admin team will review this report.</p>
+                            </div>
+                        ) : (
+                            <>
+                                <div className="report-modal-header">
+                                    <div className="report-modal-icon">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
+                                            <line x1="4" y1="22" x2="4" y2="15" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <h3>Report {reportModal.type === 'query' ? 'Query' : 'Answer'}</h3>
+                                        <p className="report-modal-subtitle">Help us keep the community safe</p>
+                                    </div>
+                                </div>
+                                <div className="report-modal-body">
+                                    <label className="report-label">Why are you reporting this?</label>
+                                    <div className="report-quick-reasons">
+                                        {['Spam', 'Inappropriate content', 'Harassment', 'Misleading information', 'Other'].map(r => (
+                                            <button
+                                                key={r}
+                                                type="button"
+                                                className={`report-reason-chip ${reportReason === r ? 'active' : ''}`}
+                                                onClick={() => setReportReason(r)}
+                                            >
+                                                {r}
+                                            </button>
+                                        ))}
+                                    </div>
+                                    <textarea
+                                        className="report-textarea"
+                                        placeholder="Provide additional details (optional if a reason is selected above)..."
+                                        value={['Spam', 'Inappropriate content', 'Harassment', 'Misleading information', 'Other'].includes(reportReason) ? reportReason : reportReason}
+                                        onChange={(e) => setReportReason(e.target.value)}
+                                        rows="3"
+                                    />
+                                </div>
+                                <div className="report-modal-actions">
+                                    <button className="btn btn-outline" onClick={closeReportModal} disabled={submittingReport}>
+                                        Cancel
+                                    </button>
+                                    <button
+                                        className="btn report-submit-btn"
+                                        onClick={handleSubmitReport}
+                                        disabled={submittingReport || !reportReason.trim()}
+                                    >
+                                        {submittingReport ? 'Submitting...' : 'Submit Report'}
+                                    </button>
+                                </div>
+                            </>
+                        )}
                     </div>
                 </div>
             )}
