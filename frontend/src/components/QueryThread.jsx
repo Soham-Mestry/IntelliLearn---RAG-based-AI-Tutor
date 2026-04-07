@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { getQueryDetails, postQueryAnswer, deleteQuery, deleteAnswer, submitReport } from '../api';
+import { getQueryDetails, postQueryAnswer, deleteQuery, deleteAnswer, submitReport, toggleQueryStatus } from '../api';
 import { getUser } from '../auth';
 
 function QueryThread({ queryId, onBack }) {
@@ -21,6 +21,9 @@ function QueryThread({ queryId, onBack }) {
     const [reportReason, setReportReason] = useState('');
     const [submittingReport, setSubmittingReport] = useState(false);
     const [reportSuccess, setReportSuccess] = useState('');
+
+    // Status toggling
+    const [togglingStatus, setTogglingStatus] = useState(false);
 
     const fileInputRef = useRef(null);
     const currentUser = getUser();
@@ -123,11 +126,27 @@ function QueryThread({ queryId, onBack }) {
         }
     };
 
+    // Status toggle handler
+    const handleToggleStatus = async () => {
+        if (!query) return;
+        const newStatus = query.status === 'open' ? 'closed' : 'open';
+        setTogglingStatus(true);
+        try {
+            await toggleQueryStatus(queryId, newStatus);
+            fetchDetail();
+        } catch (err) {
+            setAnswerError(err.message || 'Failed to update status');
+        } finally {
+            setTogglingStatus(false);
+        }
+    };
+
     if (loading) return <div className="loading-spinner">Loading thread...</div>;
     if (error) return <div className="alert alert-error">{error}</div>;
     if (!query) return null;
 
     const isQueryOwner = currentUser && currentUser.id === query.user_id;
+    const isClosed = query.status === 'closed';
 
     return (
         <div className="query-thread-view">
@@ -150,6 +169,33 @@ function QueryThread({ queryId, onBack }) {
                             Report
                         </button>
                     )}
+                    {/* Status toggle button — only for query owner */}
+                    {isQueryOwner && (
+                        <button
+                            className={`btn query-status-toggle-btn ${isClosed ? 'status-reopen-btn' : 'status-close-btn'}`}
+                            onClick={handleToggleStatus}
+                            disabled={togglingStatus}
+                            title={isClosed ? 'Reopen this query' : 'Close this query'}
+                        >
+                            {isClosed ? (
+                                <>
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <polyline points="23 4 23 10 17 10" />
+                                        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+                                    </svg>
+                                    {togglingStatus ? 'Reopening...' : 'Reopen Query'}
+                                </>
+                            ) : (
+                                <>
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                                        <polyline points="22 4 12 14.01 9 11.01" />
+                                    </svg>
+                                    {togglingStatus ? 'Closing...' : 'Close Query'}
+                                </>
+                            )}
+                        </button>
+                    )}
                     {isQueryOwner && (
                         <button
                             className="btn btn-danger-outline delete-query-btn"
@@ -168,9 +214,15 @@ function QueryThread({ queryId, onBack }) {
                 </div>
             </div>
 
-            <div className="original-query-card">
+            <div className={`original-query-card ${isClosed ? 'oq-closed' : ''}`}>
                 <div className="oq-header">
-                    <h2>{query.title}</h2>
+                    <div className="oq-title-row">
+                        <h2>{query.title}</h2>
+                        <span className={`query-status-badge-lg ${isClosed ? 'status-closed' : 'status-open'}`}>
+                            <span className={`status-dot ${isClosed ? 'dot-closed' : 'dot-open'}`}></span>
+                            {isClosed ? 'Closed' : 'Open'}
+                        </span>
+                    </div>
                     <div className="oq-meta">
                         <span className="author">Asked by: <strong>{query.user_name}</strong></span>
                         <span className="date">{new Date(query.created_at).toLocaleString()}</span>
@@ -217,7 +269,7 @@ function QueryThread({ queryId, onBack }) {
                                                 </svg>
                                             </button>
                                         )}
-                                        {isAnswerOwner && (
+                                        {isAnswerOwner && !isClosed && (
                                             <button
                                                 className="delete-answer-btn"
                                                 onClick={() => openDeleteModal('answer', ans.id)}
@@ -247,58 +299,72 @@ function QueryThread({ queryId, onBack }) {
                         );
                     })}
                     {query.answers.length === 0 && (
-                        <div className="no-answers">No answers yet. Can you help?</div>
+                        <div className="no-answers">{isClosed ? 'This query was closed with no answers.' : 'No answers yet. Can you help?'}</div>
                     )}
                 </div>
 
-                <form className="answer-form" onSubmit={handleAnswerSubmit}>
-                    <h4>Your Answer</h4>
-                    {answerError && <div className="alert alert-error">{answerError}</div>}
-                    <textarea
-                        value={answerText}
-                        onChange={(e) => setAnswerText(e.target.value)}
-                        placeholder="Type your answer here..."
-                        className="input-field textarea-field"
-                        rows="4"
-                        required
-                    />
-                    <div className="answer-form-extras">
-                        <div className="answer-image-upload">
-                            <label className="image-upload-label" htmlFor="answer-image-input">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                                    <circle cx="8.5" cy="8.5" r="1.5" />
-                                    <polyline points="21 15 16 10 5 21" />
-                                </svg>
-                                {answerImage ? answerImage.name : 'Attach Image'}
-                            </label>
-                            <input
-                                id="answer-image-input"
-                                type="file"
-                                ref={fileInputRef}
-                                onChange={(e) => setAnswerImage(e.target.files[0] || null)}
-                                accept=".jpg,.jpeg,.png,.gif,.webp"
-                                style={{ display: 'none' }}
-                            />
-                            {answerImage && (
-                                <button
-                                    type="button"
-                                    className="remove-image-btn"
-                                    onClick={() => {
-                                        setAnswerImage(null);
-                                        if (fileInputRef.current) fileInputRef.current.value = '';
-                                    }}
-                                    title="Remove image"
-                                >
-                                    ✕
-                                </button>
-                            )}
+                {/* Answer form — hidden when query is closed */}
+                {isClosed ? (
+                    <div className="query-closed-banner">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                        </svg>
+                        <div>
+                            <strong>This query is closed</strong>
+                            <p>Comments are no longer accepted.{isQueryOwner ? ' You can reopen it using the button above.' : ''}</p>
                         </div>
-                        <button type="submit" className="btn btn-primary" disabled={postingAnswer || !answerText.trim()}>
-                            {postingAnswer ? 'Posting...' : 'Post Answer'}
-                        </button>
                     </div>
-                </form>
+                ) : (
+                    <form className="answer-form" onSubmit={handleAnswerSubmit}>
+                        <h4>Your Answer</h4>
+                        {answerError && <div className="alert alert-error">{answerError}</div>}
+                        <textarea
+                            value={answerText}
+                            onChange={(e) => setAnswerText(e.target.value)}
+                            placeholder="Type your answer here..."
+                            className="input-field textarea-field"
+                            rows="4"
+                            required
+                        />
+                        <div className="answer-form-extras">
+                            <div className="answer-image-upload">
+                                <label className="image-upload-label" htmlFor="answer-image-input">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                                        <circle cx="8.5" cy="8.5" r="1.5" />
+                                        <polyline points="21 15 16 10 5 21" />
+                                    </svg>
+                                    {answerImage ? answerImage.name : 'Attach Image'}
+                                </label>
+                                <input
+                                    id="answer-image-input"
+                                    type="file"
+                                    ref={fileInputRef}
+                                    onChange={(e) => setAnswerImage(e.target.files[0] || null)}
+                                    accept=".jpg,.jpeg,.png,.gif,.webp"
+                                    style={{ display: 'none' }}
+                                />
+                                {answerImage && (
+                                    <button
+                                        type="button"
+                                        className="remove-image-btn"
+                                        onClick={() => {
+                                            setAnswerImage(null);
+                                            if (fileInputRef.current) fileInputRef.current.value = '';
+                                        }}
+                                        title="Remove image"
+                                    >
+                                        ✕
+                                    </button>
+                                )}
+                            </div>
+                            <button type="submit" className="btn btn-primary" disabled={postingAnswer || !answerText.trim()}>
+                                {postingAnswer ? 'Posting...' : 'Post Answer'}
+                            </button>
+                        </div>
+                    </form>
+                )}
             </div>
 
             {/* Delete Confirmation Modal */}

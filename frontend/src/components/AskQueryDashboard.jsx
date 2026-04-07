@@ -12,6 +12,7 @@ function AskQueryDashboard() {
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [selectedQueryId, setSelectedQueryId] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
+    const [statusFilter, setStatusFilter] = useState(null); // null = all, 'open', 'closed'
 
     // Delete confirmation state
     const [deleteModal, setDeleteModal] = useState({ show: false, queryId: '', title: '' });
@@ -22,7 +23,7 @@ function AskQueryDashboard() {
     const fetchQueries = async () => {
         setLoading(true);
         try {
-            const data = await getStudentQueries();
+            const data = await getStudentQueries(statusFilter);
             setQueries(data);
             setError('');
         } catch (err) {
@@ -34,7 +35,7 @@ function AskQueryDashboard() {
 
     useEffect(() => {
         fetchQueries();
-    }, []);
+    }, [statusFilter]);
 
     const handleQueryCreated = () => {
         fetchQueries();
@@ -94,7 +95,7 @@ function AskQueryDashboard() {
                 </button>
             </div>
 
-            {/* Search Bar */}
+            {/* Search Bar + Status Filter */}
             <div className="aq-search-wrapper">
                 <div className="aq-search-bar">
                     <svg className="aq-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -126,12 +127,39 @@ function AskQueryDashboard() {
                 )}
             </div>
 
+            {/* Status Filter Chips */}
+            <div className="aq-status-filter-bar">
+                <span className="aq-filter-label">Filter:</span>
+                <button
+                    className={`aq-filter-chip ${statusFilter === null ? 'active' : ''}`}
+                    onClick={() => setStatusFilter(null)}
+                >
+                    All
+                </button>
+                <button
+                    className={`aq-filter-chip aq-filter-open ${statusFilter === 'open' ? 'active' : ''}`}
+                    onClick={() => setStatusFilter('open')}
+                >
+                    <span className="aq-filter-dot aq-dot-open"></span>
+                    Open
+                </button>
+                <button
+                    className={`aq-filter-chip aq-filter-closed ${statusFilter === 'closed' ? 'active' : ''}`}
+                    onClick={() => setStatusFilter('closed')}
+                >
+                    <span className="aq-filter-dot aq-dot-closed"></span>
+                    Closed
+                </button>
+            </div>
+
             {error && <div className="alert alert-error">{error}</div>}
 
             {loading ? (
                 <div className="loading-spinner">Loading threads...</div>
             ) : queries.length === 0 ? (
-                <div className="no-queries">No queries yet. Be the first to ask!</div>
+                <div className="no-queries">
+                    {statusFilter ? `No ${statusFilter} queries found.` : 'No queries yet. Be the first to ask!'}
+                </div>
             ) : filteredQueries.length === 0 ? (
                 <div className="no-queries aq-no-results">
                     <span className="aq-no-results-icon">🔍</span>
@@ -143,9 +171,15 @@ function AskQueryDashboard() {
                     {filteredQueries.map(q => {
                         const isOwner = currentUser && currentUser.id === q.user_id;
                         return (
-                            <div key={q.id} className="query-card" onClick={() => setSelectedQueryId(q.id)}>
+                            <div key={q.id} className={`query-card ${q.status === 'closed' ? 'query-card-closed' : ''}`} onClick={() => setSelectedQueryId(q.id)}>
                                 <div className="query-card-header">
-                                    <h3>{q.title}</h3>
+                                    <div className="query-card-title-row">
+                                        <h3>{q.title}</h3>
+                                        <span className={`query-status-badge ${q.status === 'open' ? 'status-open' : 'status-closed'}`}>
+                                            <span className={`status-dot ${q.status === 'open' ? 'dot-open' : 'dot-closed'}`}></span>
+                                            {q.status === 'open' ? 'Open' : 'Closed'}
+                                        </span>
+                                    </div>
                                     <div className="query-card-header-right">
                                         <span className="query-author">by {q.user_name}</span>
                                         {isOwner && (

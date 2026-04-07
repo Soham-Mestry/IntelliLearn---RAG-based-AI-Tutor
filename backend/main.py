@@ -161,6 +161,7 @@ class StudentQueryResponse(BaseModel):
     title: str
     description: str
     image_path: Optional[str] = None
+    status: str = "open"
     created_at: str
     answer_count: int = 0
     
@@ -434,18 +435,25 @@ async def create_query(
         "title": new_query.title,
         "description": new_query.description,
         "image_path": new_query.image_path,
+        "status": new_query.status,
         "created_at": new_query.created_at.isoformat(),
         "answer_count": 0
     }
 
 @app.get("/student/queries", response_model=List[StudentQueryResponse])
 def get_queries(
+    status_filter: Optional[str] = None,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """List all student queries"""
+    """List all student queries. Optional status_filter: 'open' or 'closed'."""
     from sqlalchemy.orm import joinedload
-    queries = db.query(StudentQuery).options(joinedload(StudentQuery.user), joinedload(StudentQuery.answers)).order_by(StudentQuery.created_at.desc()).all()
+    query = db.query(StudentQuery).options(joinedload(StudentQuery.user), joinedload(StudentQuery.answers))
+    
+    if status_filter and status_filter in ('open', 'closed'):
+        query = query.filter(StudentQuery.status == status_filter)
+    
+    queries = query.order_by(StudentQuery.created_at.desc()).all()
     
     return [
         {
@@ -455,6 +463,7 @@ def get_queries(
             "title": q.title,
             "description": q.description,
             "image_path": q.image_path,
+            "status": q.status,
             "created_at": q.created_at.isoformat(),
             "answer_count": len(q.answers)
         }
@@ -481,6 +490,7 @@ def get_query_details(
         "title": q.title,
         "description": q.description,
         "image_path": q.image_path,
+        "status": q.status,
         "created_at": q.created_at.isoformat(),
         "answer_count": len(q.answers),
         "answers": [
@@ -504,13 +514,16 @@ async def post_query_answer(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Post an answer to a query with optional image attachment"""
+    """Post an answer to a query with optional image attachment. Blocked if query is closed."""
     if not answer_text.strip():
         raise HTTPException(status_code=400, detail="Answer text cannot be empty")
     
     query = db.query(StudentQuery).filter(StudentQuery.id == query_id).first()
     if not query:
         raise HTTPException(status_code=404, detail="Query not found")
+    
+    if query.status == "closed":
+        raise HTTPException(status_code=403, detail="This query is closed. No new answers can be posted.")
     
     image_path = None
     if image and image.filename:
@@ -618,6 +631,33 @@ def delete_answer(
     db.commit()
     
     return {"message": "Answer deleted successfully", "answer_id": answer_id}
+
+
+@app.patch("/student/queries/{query_id}/status", status_code=status.HTTP_200_OK)
+def toggle_query_status(
+    query_id: str,
+    new_status: str = Form(...),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Toggle a query's status between 'open' and 'closed'.
+    Only the query owner can change the status.
+    """
+    if new_status not in ('open', 'closed'):
+        raise HTTPException(status_code=400, detail="Status must be 'open' or 'closed'")
+    
+    query = db.query(StudentQuery).filter(StudentQuery.id == query_id).first()
+    if not query:
+        raise HTTPException(status_code=404, detail="Query not found")
+    
+    if str(query.user_id) != str(current_user.id):
+        raise HTTPException(status_code=403, detail="Only the query creator can change the status")
+    
+    query.status = new_status
+    db.commit()
+    
+    return {"message": f"Query status updated to {new_status}", "query_id": query_id, "status": new_status}
 
 
 # ============= Report Routes (Student) =============
@@ -882,18 +922,25 @@ def delete_subject(
 
 @app.get("/admin/queries", response_model=List[StudentQueryDetailResponse])
 def admin_get_all_queries(
+    status_filter: Optional[str] = None,
     current_user: User = Depends(require_admin),
     db: Session = Depends(get_db)
 ):
     """
     Get all student queries with their answers.
-    Admin only. Returns queries sorted newest first.
+    Admin only. Optional status_filter: 'open' or 'closed'.
+    Returns queries sorted newest first.
     """
     from sqlalchemy.orm import joinedload
-    queries = db.query(StudentQuery).options(
+    query = db.query(StudentQuery).options(
         joinedload(StudentQuery.user),
         joinedload(StudentQuery.answers).joinedload(QueryAnswer.user)
-    ).order_by(StudentQuery.created_at.desc()).all()
+    )
+    
+    if status_filter and status_filter in ('open', 'closed'):
+        query = query.filter(StudentQuery.status == status_filter)
+    
+    queries = query.order_by(StudentQuery.created_at.desc()).all()
 
     return [
         {
@@ -903,6 +950,7 @@ def admin_get_all_queries(
             "title": q.title,
             "description": q.description,
             "image_path": q.image_path,
+            "status": q.status,
             "created_at": q.created_at.isoformat(),
             "answer_count": len(q.answers),
             "answers": [

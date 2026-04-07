@@ -19,6 +19,7 @@ function Admin() {
     const [queries, setQueries] = useState([]);
     const [expandedQueryId, setExpandedQueryId] = useState(null);
     const [querySearch, setQuerySearch] = useState('');
+    const [queryStatusFilter, setQueryStatusFilter] = useState(null); // null = all, 'open', 'closed'
 
     // Delete confirmation modal state
     const [deleteModal, setDeleteModal] = useState({
@@ -61,12 +62,17 @@ function Admin() {
 
     const fetchAllQueries = async () => {
         try {
-            const data = await getAdminQueries();
+            const data = await getAdminQueries(queryStatusFilter);
             setQueries(data);
         } catch (err) {
             // Silently fail — section will show empty
         }
     };
+
+    // Refetch when status filter changes
+    useEffect(() => {
+        fetchAllQueries();
+    }, [queryStatusFilter]);
 
     const fetchAllReports = async () => {
         setReportLoading(true);
@@ -938,7 +944,7 @@ function Admin() {
                             <span style={{ background: 'var(--background)', color: 'var(--text-muted)', padding: '4px 12px', borderRadius: '16px', fontSize: '13px', fontWeight: 600 }}>Total: {queries.length}</span>
                         </div>
 
-                        {/* Search bar */}
+                        {/* Search bar + Status Filter */}
                         <div style={{ marginBottom: '20px' }}>
                             <input
                                 type="text"
@@ -948,6 +954,40 @@ function Admin() {
                                 onChange={(e) => setQuerySearch(e.target.value)}
                                 style={{ background: 'white', borderRadius: '12px', fontSize: '14px' }}
                             />
+                        </div>
+
+                        {/* Status Filter Chips */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px', flexWrap: 'wrap' }}>
+                            <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>Status:</span>
+                            {[{ label: 'All', value: null }, { label: 'Open', value: 'open' }, { label: 'Closed', value: 'closed' }].map((f) => (
+                                <button
+                                    key={f.label}
+                                    onClick={() => setQueryStatusFilter(f.value)}
+                                    style={{
+                                        padding: '6px 16px',
+                                        borderRadius: '20px',
+                                        border: queryStatusFilter === f.value ? 'none' : '1.5px solid var(--border)',
+                                        background: queryStatusFilter === f.value
+                                            ? f.value === 'open' ? 'linear-gradient(135deg, #10b981, #059669)'
+                                            : f.value === 'closed' ? 'linear-gradient(135deg, #6b7280, #4b5563)'
+                                            : 'linear-gradient(135deg, #f59e0b, #d97706)'
+                                            : 'white',
+                                        color: queryStatusFilter === f.value ? 'white' : 'var(--text-muted)',
+                                        fontSize: '12px',
+                                        fontWeight: 600,
+                                        cursor: 'pointer',
+                                        transition: 'all 0.2s',
+                                        boxShadow: queryStatusFilter === f.value ? '0 3px 10px rgba(0,0,0,0.12)' : 'none',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '6px',
+                                    }}
+                                >
+                                    {f.value === 'open' && <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: queryStatusFilter === 'open' ? 'white' : '#10b981' }}></span>}
+                                    {f.value === 'closed' && <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: queryStatusFilter === 'closed' ? 'white' : '#9ca3af' }}></span>}
+                                    {f.label}
+                                </button>
+                            ))}
                         </div>
                         
                         <div className="admin-scroll" style={{ maxHeight: '500px', overflowY: 'auto', paddingRight: '8px' }}>
@@ -988,6 +1028,29 @@ function Admin() {
                                                 <div style={{ flex: 1, minWidth: 0 }}>
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px', flexWrap: 'wrap' }}>
                                                         <h4 style={{ margin: 0, fontSize: '15px', fontWeight: 700, color: 'var(--text-main)' }}>{q.title}</h4>
+                                                        {/* Status badge */}
+                                                        <span style={{
+                                                            display: 'inline-flex',
+                                                            alignItems: 'center',
+                                                            gap: '5px',
+                                                            padding: '2px 10px',
+                                                            borderRadius: '12px',
+                                                            fontSize: '10px',
+                                                            fontWeight: 700,
+                                                            textTransform: 'uppercase',
+                                                            letterSpacing: '0.05em',
+                                                            background: q.status === 'open' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(107, 114, 128, 0.1)',
+                                                            color: q.status === 'open' ? '#059669' : '#6b7280',
+                                                            border: `1px solid ${q.status === 'open' ? 'rgba(16, 185, 129, 0.25)' : 'rgba(107, 114, 128, 0.25)'}`,
+                                                        }}>
+                                                            <span style={{
+                                                                width: '6px',
+                                                                height: '6px',
+                                                                borderRadius: '50%',
+                                                                background: q.status === 'open' ? '#10b981' : '#9ca3af',
+                                                            }}></span>
+                                                            {q.status}
+                                                        </span>
                                                         {q.image_path && (
                                                             <span style={{ fontSize: '11px', padding: '2px 8px', background: '#dbeafe', color: '#1d4ed8', borderRadius: '6px', fontWeight: 600 }}>📷 Image</span>
                                                         )}

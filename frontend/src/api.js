@@ -90,8 +90,9 @@ export const createStudentQuery = async (formData) => {
     return response.data;
 };
 
-export const getStudentQueries = async () => {
-    const response = await api.get('/student/queries');
+export const getStudentQueries = async (statusFilter = null) => {
+    const params = statusFilter ? { status_filter: statusFilter } : {};
+    const response = await api.get('/student/queries', { params });
     return response.data;
 };
 
@@ -116,6 +117,15 @@ export const deleteQuery = async (queryId) => {
 
 export const deleteAnswer = async (queryId, answerId) => {
     const response = await api.delete(`/student/queries/${queryId}/answers/${answerId}`);
+    return response.data;
+};
+
+export const toggleQueryStatus = async (queryId, newStatus) => {
+    const formData = new FormData();
+    formData.append('new_status', newStatus);
+    const response = await api.patch(`/student/queries/${queryId}/status`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+    });
     return response.data;
 };
 
@@ -156,8 +166,9 @@ export const deleteSubject = async (subjectId) => {
 
 // ============= Admin Query Management API =============
 
-export const getAdminQueries = async () => {
-    const response = await api.get('/admin/queries');
+export const getAdminQueries = async (statusFilter = null) => {
+    const params = statusFilter ? { status_filter: statusFilter } : {};
+    const response = await api.get('/admin/queries', { params });
     return response.data;
 };
 

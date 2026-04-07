@@ -102,11 +102,16 @@ class StudentQuery(Base):
     title = Column(String(255), nullable=False)
     description = Column(Text, nullable=False)
     image_path = Column(String(500), nullable=True)  # Optional image
+    status = Column(String(10), nullable=False, default="open")  # 'open' or 'closed'
     created_at = Column(DateTime, default=datetime.utcnow)
     
     # Relationships
     user = relationship("User", backref="student_queries")
     answers = relationship("QueryAnswer", back_populates="query", cascade="all, delete-orphan", order_by="QueryAnswer.created_at.asc()")
+    
+    __table_args__ = (
+        CheckConstraint("status IN ('open', 'closed')", name="check_query_status"),
+    )
 
 
 class QueryAnswer(Base):

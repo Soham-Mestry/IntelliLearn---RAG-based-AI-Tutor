@@ -849,3 +849,253 @@
   color: var(--text-muted, #64748b);
   line-height: 1.5;
 }
+
+/* =============================================
+   QUERY STATUS: Open/Closed System
+   ============================================= */
+
+/* ── Status Badges ── */
+.query-status-badge,
+.query-status-badge-lg {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  border-radius: 20px;
+  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.query-status-badge {
+  padding: 3px 10px;
+  font-size: 11px;
+}
+
+.query-status-badge-lg {
+  padding: 5px 14px;
+  font-size: 12px;
+}
+
+.status-open {
+  background: rgba(16, 185, 129, 0.1);
+  color: #059669;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.status-closed {
+  background: rgba(107, 114, 128, 0.1);
+  color: #6b7280;
+  border: 1px solid rgba(107, 114, 128, 0.25);
+}
+
+/* Status dots */
+.status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.dot-open {
+  background: #10b981;
+  box-shadow: 0 0 6px rgba(16, 185, 129, 0.5);
+  animation: pulseDot 2s ease-in-out infinite;
+}
+
+.dot-closed {
+  background: #9ca3af;
+}
+
+@keyframes pulseDot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* ── Query Card Title Row (with badge inline) ── */
+.query-card-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.query-card-title-row h3 {
+  margin: 0;
+}
+
+/* Closed query card dim effect */
+.query-card-closed {
+  opacity: 0.72;
+  border-left: 3px solid #9ca3af;
+}
+
+.query-card-closed:hover {
+  opacity: 0.88;
+}
+
+/* ── Original Query Card — closed styling ── */
+.oq-closed {
+  border-left: 3px solid #9ca3af;
+}
+
+.oq-title-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.oq-title-row h2 {
+  margin: 0;
+}
+
+/* ── Status Filter Bar ── */
+.aq-status-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.aq-filter-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted, #94a3b8);
+  margin-right: 2px;
+}
+
+.aq-filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 20px;
+  border: 1.5px solid var(--border-color, #e2e8f0);
+  background: var(--surface, #fff);
+  color: var(--text-muted, #64748b);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.aq-filter-chip:hover {
+  border-color: var(--primary-color, #6366f1);
+  color: var(--primary-color, #6366f1);
+  background: rgba(99, 102, 241, 0.04);
+}
+
+.aq-filter-chip.active {
+  border-color: var(--primary-color, #6366f1);
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(99, 102, 241, 0.05));
+  color: var(--primary-color, #6366f1);
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.15);
+}
+
+.aq-filter-chip.aq-filter-open.active {
+  border-color: #10b981;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(16, 185, 129, 0.05));
+  color: #059669;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.15);
+}
+
+.aq-filter-chip.aq-filter-closed.active {
+  border-color: #6b7280;
+  background: linear-gradient(135deg, rgba(107, 114, 128, 0.12), rgba(107, 114, 128, 0.05));
+  color: #4b5563;
+  box-shadow: 0 2px 8px rgba(107, 114, 128, 0.15);
+}
+
+.aq-filter-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.aq-dot-open {
+  background: #10b981;
+}
+
+.aq-dot-closed {
+  background: #9ca3af;
+}
+
+/* ── Status Toggle Button ── */
+.query-status-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.status-close-btn {
+  color: #059669;
+  background: rgba(16, 185, 129, 0.08);
+  border: 1.5px solid rgba(16, 185, 129, 0.3);
+}
+
+.status-close-btn:hover {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: #10b981;
+  transform: translateY(-1px);
+}
+
+.status-reopen-btn {
+  color: var(--primary-color, #6366f1);
+  background: rgba(99, 102, 241, 0.08);
+  border: 1.5px solid rgba(99, 102, 241, 0.3);
+}
+
+.status-reopen-btn:hover {
+  background: rgba(99, 102, 241, 0.15);
+  border-color: var(--primary-color, #6366f1);
+  transform: translateY(-1px);
+}
+
+.query-status-toggle-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ── Closed Query Banner ── */
+.query-closed-banner {
+  margin-top: 2rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 20px 24px;
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  color: #475569;
+}
+
+.query-closed-banner svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: #64748b;
+}
+
+.query-closed-banner strong {
+  display: block;
+  font-size: 15px;
+  font-weight: 700;
+  color: #334155;
+  margin-bottom: 4px;
+}
+
+.query-closed-banner p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #64748b;
+}
+
