@@ -27,7 +27,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 2px solid var(--border-color);
+  border-bottom: 2px solid var(--border);
   padding-bottom: 1rem;
 }
 
@@ -49,8 +49,8 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  background: var(--surface, #fff);
-  border: 1.5px solid var(--border-color, #e2e8f0);
+  background: var(--surface);
+  border: 1.5px solid var(--border);
   border-radius: 12px;
   padding: 0 16px;
   height: 46px;
@@ -82,12 +82,12 @@
   background: transparent;
   font-size: 14px;
   font-family: inherit;
-  color: var(--text-color, #1e293b);
+  color: var(--text-main);
   height: 100%;
 }
 
 .aq-search-input::placeholder {
-  color: var(--text-muted, #94a3b8);
+  color: var(--text-muted);
 }
 
 .aq-search-clear {
@@ -157,8 +157,8 @@
 
 
 .query-card {
-  background-color: var(--card-bg);
-  border: 1px solid var(--border-color);
+  background-color: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 8px;
   padding: 1.5rem;
   cursor: pointer;
@@ -168,7 +168,7 @@
 .query-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  border-color: var(--primary-color);
+  border-color: var(--primary);
 }
 
 .query-card-header {
@@ -181,17 +181,17 @@
 .query-card-header h3 {
   margin: 0;
   font-size: 1.25rem;
-  color: var(--text-color);
+  color: var(--text-main);
 }
 
 .query-author {
   font-size: 0.875rem;
-  color: var(--primary-color);
+  color: var(--primary);
   font-weight: 500;
 }
 
 .query-preview {
-  color: var(--text-color);
+  color: var(--text-main);
   opacity: 0.8;
   margin-bottom: 1rem;
   line-height: 1.5;
@@ -224,7 +224,7 @@
 }
 
 .modal-content.query-modal {
-  background-color: var(--bg-color);
+  background-color: var(--surface);
   width: 90%;
   max-width: 600px;
   max-height: 90vh;
@@ -235,7 +235,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border);
   padding-bottom: 1rem;
   margin-bottom: 1.5rem;
 }
@@ -245,7 +245,7 @@
   border: none;
   font-size: 1.5rem;
   cursor: pointer;
-  color: var(--text-color);
+  color: var(--text-main);
 }
 
 .query-form {
@@ -289,14 +289,14 @@
 }
 
 .original-query-card {
-  background-color: var(--card-bg);
-  border: 1px solid var(--border-color);
+  background-color: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 8px;
   padding: 1.5rem;
 }
 
 .oq-header {
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border);
   padding-bottom: 1rem;
   margin-bottom: 1rem;
 }
@@ -344,8 +344,8 @@
 }
 
 .answer-card {
-  background-color: var(--card-bg);
-  border: 1px solid var(--border-color);
+  background-color: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 8px;
   padding: 1rem 1.5rem;
 }
@@ -355,11 +355,11 @@
   justify-content: space-between;
   margin-bottom: 0.5rem;
   font-size: 0.9rem;
-  color: #6b7280;
+  color: var(--text-muted);
 }
 
 .ans-header strong {
-  color: var(--primary-color);
+  color: var(--primary);
 }
 
 .ans-body p {
@@ -369,10 +369,10 @@
 }
 .answer-form {
   margin-top: 2rem;
-  background-color: var(--card-bg);
+  background-color: var(--surface);
   padding: 1.5rem;
   border-radius: 8px;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border);
 }
 
 .answer-form h4 {
@@ -445,7 +445,7 @@
   margin-top: 12px;
   border-radius: 8px;
   overflow: hidden;
-  border: 1px solid var(--border-color, #e2e8f0);
+  border: 1px solid var(--border);
 }
 
 .ans-image {
@@ -572,14 +572,14 @@
 
 /* ── Delete Confirmation Modal ── */
 .delete-confirm-modal {
-  background: var(--bg-color, #fff);
+  background: var(--surface);
   padding: 32px;
   border-radius: 16px;
   width: 90%;
   max-width: 420px;
   text-align: center;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-  border: 1px solid var(--border-color, #e2e8f0);
+  border: 1px solid var(--border);
   animation: slideIn 0.25s ease-out;
 }
 
@@ -603,14 +603,14 @@
   margin: 0 0 8px 0;
   font-size: 20px;
   font-weight: 700;
-  color: var(--text-color, #1e293b);
+  color: var(--text-main);
 }
 
 .delete-modal-title {
   margin: 0 0 8px 0;
   font-size: 14px;
   font-weight: 600;
-  color: var(--primary-color, #6366f1);
+  color: var(--primary);
   font-style: italic;
 }
 
@@ -618,7 +618,7 @@
   margin: 0 0 24px 0;
   font-size: 14px;
   line-height: 1.6;
-  color: var(--text-muted, #64748b);
+  color: var(--text-muted);
 }
 
 .delete-modal-actions {
@@ -677,13 +677,13 @@
 
 /* ── Report Modal ── */
 .report-modal {
-  background: var(--bg-color, #fff);
+  background: var(--surface);
   padding: 0;
   border-radius: 20px;
   width: 90%;
   max-width: 480px;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-  border: 1px solid var(--border-color, #e2e8f0);
+  border: 1px solid var(--border);
   animation: slideIn 0.25s ease-out;
   overflow: hidden;
 }
@@ -730,7 +730,7 @@
   display: block;
   font-size: 14px;
   font-weight: 600;
-  color: var(--text-color, #1e293b);
+  color: var(--text-main);
   margin-bottom: 12px;
 }
 
@@ -772,10 +772,10 @@
   padding: 12px 16px;
   font-size: 14px;
   font-family: inherit;
-  border: 1.5px solid #e2e8f0;
+  border: 1.5px solid var(--border);
   border-radius: 12px;
-  background: #f8fafc;
-  color: var(--text-color, #1e293b);
+  background: var(--background);
+  color: var(--text-main);
   resize: vertical;
   min-height: 70px;
   transition: border-color 0.2s, box-shadow 0.2s;
@@ -973,23 +973,23 @@
   font-size: 13px;
   font-weight: 600;
   border-radius: 20px;
-  border: 1.5px solid var(--border-color, #e2e8f0);
-  background: var(--surface, #fff);
-  color: var(--text-muted, #64748b);
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  color: var(--text-muted);
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .aq-filter-chip:hover {
-  border-color: var(--primary-color, #6366f1);
-  color: var(--primary-color, #6366f1);
+  border-color: var(--primary);
+  color: var(--primary);
   background: rgba(99, 102, 241, 0.04);
 }
 
 .aq-filter-chip.active {
-  border-color: var(--primary-color, #6366f1);
+  border-color: var(--primary);
   background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(99, 102, 241, 0.05));
-  color: var(--primary-color, #6366f1);
+  color: var(--primary);
   box-shadow: 0 2px 8px rgba(99, 102, 241, 0.15);
 }
 
@@ -1048,14 +1048,14 @@
 }
 
 .status-reopen-btn {
-  color: var(--primary-color, #6366f1);
+  color: var(--primary);
   background: rgba(99, 102, 241, 0.08);
   border: 1.5px solid rgba(99, 102, 241, 0.3);
 }
 
 .status-reopen-btn:hover {
   background: rgba(99, 102, 241, 0.15);
-  border-color: var(--primary-color, #6366f1);
+  border-color: var(--primary);
   transform: translateY(-1px);
 }
 

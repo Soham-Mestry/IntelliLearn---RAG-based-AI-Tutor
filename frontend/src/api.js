@@ -213,17 +213,13 @@ export const updateReportStatus = async (reportId, newStatus) => {
 };
 
 export const getAllSubjects = async () => {
-    // Get all subjects across all semesters for admin
-    const allSubjects = [];
-    for (let sem = 1; sem <= 8; sem++) {
-        try {
-            const subjects = await getSubjects(sem);
-            allSubjects.push(...subjects);
-        } catch (error) {
-            // Continue if a semester has no subjects
-        }
-    }
-    return allSubjects;
+    // Get all subjects across all semesters for admin — fire all requests in parallel
+    const results = await Promise.allSettled(
+        [1, 2, 3, 4, 5, 6, 7, 8].map((sem) => getSubjects(sem))
+    );
+    return results
+        .filter((r) => r.status === 'fulfilled')
+        .flatMap((r) => r.value);
 };
 
 export default api;

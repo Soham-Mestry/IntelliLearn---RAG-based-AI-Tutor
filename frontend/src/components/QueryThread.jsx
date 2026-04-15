@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { getQueryDetails, postQueryAnswer, deleteQuery, deleteAnswer, submitReport, toggleQueryStatus } from '../api';
 import { getUser } from '../auth';
 
@@ -27,6 +27,8 @@ function QueryThread({ queryId, onBack }) {
 
     const fileInputRef = useRef(null);
     const currentUser = getUser();
+    // Resolve API base from env so image URLs work in all environments
+    const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
     const fetchDetail = async () => {
         setLoading(true);
@@ -234,7 +236,7 @@ function QueryThread({ queryId, onBack }) {
                     {query.image_path && (
                         <div className="oq-image-container">
                             <img
-                                src={`http://localhost:8000/${query.image_path.replace(/\\/g, '/').replace(/^\//, '')}`}
+                                src={`${API_BASE}/${query.image_path.replace(/\\/g, '/').replace(/^\//, '')}`}
                                 alt="Query attachment"
                                 className="oq-image"
                                 style={{ borderRadius: '8px', border: '1px solid var(--border)', maxWidth: '100%' }}
@@ -288,7 +290,7 @@ function QueryThread({ queryId, onBack }) {
                                     {ans.image_path && (
                                         <div className="ans-image-container">
                                             <img
-                                                src={`http://localhost:8000/${ans.image_path.replace(/\\/g, '/').replace(/^\//, '')}`}
+                                                src={`${API_BASE}/${ans.image_path.replace(/\\/g, '/').replace(/^\//, '')}`}
                                                 alt="Answer attachment"
                                                 className="ans-image"
                                             />

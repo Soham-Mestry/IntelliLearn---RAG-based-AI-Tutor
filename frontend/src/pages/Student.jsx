@@ -84,7 +84,7 @@ function Student() {
                                 ))}
                             </div>
                         ) : (
-                            <p style={{ color: '#6b7280', fontSize: '14px' }}>No subjects available</p>
+                            <p className="text-muted" style={{ fontSize: '14px' }}>No subjects available</p>
                         )}
                     </div>
                 </div>

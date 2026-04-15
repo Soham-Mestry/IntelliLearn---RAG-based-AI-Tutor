@@ -18,6 +18,7 @@ const MessageBubble = memo(({ message }) => {
         </div>
     );
 });
+MessageBubble.displayName = 'MessageBubble';
 
 function ChatBox({ subjectId, subjectName }) {
     const [messages, setMessages] = useState([]);
@@ -108,7 +109,7 @@ function ChatBox({ subjectId, subjectName }) {
         }
     };
 
-    const handleKeyPress = (e) => {
+    const handleKeyDown = (e) => {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
             handleSend();
@@ -199,7 +200,7 @@ function ChatBox({ subjectId, subjectName }) {
                     className="chat-input"
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
-                    onKeyPress={handleKeyPress}
+                    onKeyDown={handleKeyDown}
                     placeholder={`Ask about ${subjectName}...`}
                     disabled={loading}
                     rows={1}
