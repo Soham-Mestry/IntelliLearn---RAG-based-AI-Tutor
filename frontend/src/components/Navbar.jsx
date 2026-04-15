@@ -41,7 +41,7 @@ function Navbar() {
                                 <span className="user-role">{user.role}</span>
                             </div>
                         </div>
-                        
+
                         <div className="divider"></div>
 
                         <button onClick={handleLogout} className="btn-logout" title="Logout">

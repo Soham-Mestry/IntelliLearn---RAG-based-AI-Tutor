@@ -57,7 +57,7 @@ function Home() {
                         ✨ The Future of Learning is Here
                     </div>
                     <h1 style={{ fontSize: '56px', fontWeight: '800', color: 'var(--text-main)', lineHeight: '1.1', marginBottom: '24px', letterSpacing: '-0.03em' }}>
-                        Your Smart, Personalized <br/><span style={{ background: 'linear-gradient(90deg, var(--primary), var(--secondary))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>AI Learning Companion</span>
+                        Your Smart, Personalized <br /><span style={{ background: 'linear-gradient(90deg, var(--primary), var(--secondary))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>AI Learning Companion</span>
                     </h1>
                     <p style={{ fontSize: '20px', color: 'var(--text-muted)', marginBottom: '40px', lineHeight: '1.6', maxWidth: '600px', margin: '0 auto 40px' }}>
                         Transform the way you study. Upload university materials, ask complex questions, and get precise, mathematically accurate answers perfectly tailored to your syllabus.
@@ -90,8 +90,8 @@ function Home() {
                     <div className="grid grid-3" style={{ gap: '32px' }}>
                         {/* Feature 1 */}
                         <div className="card" style={{ padding: '40px 32px', borderRadius: '24px', border: '1px solid var(--border)', boxShadow: 'var(--shadow-sm)', transition: 'transform 0.3s', cursor: 'pointer' }}
-                             onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-10px)'}
-                             onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}>
+                            onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-10px)'}
+                            onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}>
                             <div style={{ width: '60px', height: '60px', background: 'var(--primary-light)', color: 'var(--primary)', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '24px', fontSize: '24px' }}>
                                 📚
                             </div>
@@ -100,11 +100,11 @@ function Home() {
                                 The AI strictly restricts its knowledge to the context of the supplied university notes. No hallucinations, no generic internet answers.
                             </p>
                         </div>
-                        
+
                         {/* Feature 2 */}
                         <div className="card" style={{ padding: '40px 32px', borderRadius: '24px', border: '1px solid var(--border)', boxShadow: 'var(--shadow-sm)', transition: 'transform 0.3s', cursor: 'pointer' }}
-                             onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-10px)'}
-                             onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}>
+                            onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-10px)'}
+                            onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}>
                             <div style={{ width: '60px', height: '60px', background: 'var(--secondary-light)', color: 'var(--secondary-hover)', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '24px', fontSize: '24px' }}>
                                 ➗
                             </div>
@@ -116,8 +116,8 @@ function Home() {
 
                         {/* Feature 3 */}
                         <div className="card" style={{ padding: '40px 32px', borderRadius: '24px', border: '1px solid var(--border)', boxShadow: 'var(--shadow-sm)', transition: 'transform 0.3s', cursor: 'pointer' }}
-                             onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-10px)'}
-                             onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}>
+                            onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-10px)'}
+                            onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}>
                             <div style={{ width: '60px', height: '60px', background: 'var(--accent-light)', color: 'var(--accent)', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '24px', fontSize: '24px' }}>
                                 💬
                             </div>
@@ -141,7 +141,7 @@ function Home() {
                     </button>
                 </div>
             </section>
-            
+
             {/* Footer */}
             <footer style={{ padding: '32px 24px', background: 'white', textAlign: 'center', borderTop: '1px solid var(--border)', color: 'var(--text-muted)', fontSize: '14px' }}>
                 © {new Date().getFullYear()} AI Tutor Platform. All rights reserved.

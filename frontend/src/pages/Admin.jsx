@@ -356,7 +356,7 @@ function Admin() {
     return (
         <div style={{ minHeight: '100vh', background: 'var(--surface-alt)' }}>
             <Navbar />
-            
+
             {/* ========== DELETE CONFIRMATION MODAL ========== */}
             {deleteModal.isOpen && (
                 <div
@@ -555,7 +555,7 @@ function Admin() {
             `}</style>
 
             <div className="container animate-fade-in" style={{ padding: '0 24px 40px', maxWidth: '800px' }}>
-                
+
                 {/* Admin Header Section */}
                 <div style={{
                     background: 'linear-gradient(135deg, var(--surface) 0%, var(--primary-light) 100%)',
@@ -604,7 +604,7 @@ function Admin() {
                 {success && <div className="alert alert-success">{success}</div>}
 
                 <div className="flex-col" style={{ gap: '32px' }}>
-                    
+
                     {/* Create Subject Card */}
                     <div id="create-subject" className="card" style={{ marginBottom: 0, padding: '32px', position: 'relative', overflow: 'hidden', scrollMarginTop: '160px' }}>
                         <div style={{ position: 'absolute', top: 0, left: 0, width: '4px', height: '100%', background: 'var(--secondary)' }}></div>
@@ -771,7 +771,7 @@ function Admin() {
                                 </button>
                             </div>
                         </div>
-                        
+
                         <div className="admin-scroll" style={{ maxHeight: '400px', overflowY: 'auto', paddingRight: '8px' }}>
                             {filteredSortedSubjects.length === 0 ? (
                                 <div style={{ padding: '32px', textAlign: 'center', background: 'var(--background)', borderRadius: '12px', border: '1px dashed var(--border)' }}>
@@ -782,14 +782,14 @@ function Admin() {
                             ) : (
                                 <div className="grid grid-2" style={{ gap: '16px' }}>
                                     {filteredSortedSubjects.map((subject) => (
-                                        <div key={subject.id} className="subject-card-admin" style={{ 
+                                        <div key={subject.id} className="subject-card-admin" style={{
                                             padding: '16px', background: 'white', borderRadius: '12px', border: '1px solid var(--border)',
                                             display: 'flex', flexDirection: 'column', gap: '8px', boxShadow: 'var(--shadow-sm)',
                                             transition: 'transform 0.2s, box-shadow 0.2s', cursor: 'default', position: 'relative'
                                         }}>
                                             <span style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--secondary-hover)', fontWeight: 700 }}>Sem {subject.semester}</span>
                                             <h3 style={{ fontSize: '15px', color: 'var(--text-main)', margin: 0, fontWeight: 600, paddingRight: '32px' }}>{subject.name}</h3>
-                                            
+
                                             {/* Delete button for subject — trash icon */}
                                             <button
                                                 className="subject-delete-btn"
@@ -892,35 +892,35 @@ function Admin() {
                                             {sortedNotes.map((note) => {
                                                 const noteSem = getNoteSemester(note);
                                                 return (
-                                                <tr key={note.id} style={{ borderBottom: '1px solid var(--border)', transition: 'background 0.2s' }} className="table-row-hover">
-                                                    <td style={{ padding: '16px 20px' }}>
-                                                        <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '4px' }}>{note.filename}</div>
-                                                        <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{new Date(note.uploaded_at).toLocaleDateString()} at {new Date(note.uploaded_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
-                                                    </td>
-                                                    <td style={{ padding: '16px 20px' }}>
-                                                        <span style={{ display: 'inline-block', padding: '6px 12px', background: 'var(--background)', border: '1px solid var(--border)', borderRadius: '20px', fontSize: '13px', color: 'var(--text-main)', fontWeight: 500 }}>
-                                                            {note.subject_name}
-                                                        </span>
-                                                        {noteSem !== 999 && (
-                                                            <span style={{ display: 'inline-block', marginLeft: '6px', padding: '3px 8px', background: 'var(--secondary-light)', borderRadius: '10px', fontSize: '11px', color: 'var(--secondary-hover)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                                                                Sem {noteSem}
+                                                    <tr key={note.id} style={{ borderBottom: '1px solid var(--border)', transition: 'background 0.2s' }} className="table-row-hover">
+                                                        <td style={{ padding: '16px 20px' }}>
+                                                            <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '4px' }}>{note.filename}</div>
+                                                            <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{new Date(note.uploaded_at).toLocaleDateString()} at {new Date(note.uploaded_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+                                                        </td>
+                                                        <td style={{ padding: '16px 20px' }}>
+                                                            <span style={{ display: 'inline-block', padding: '6px 12px', background: 'var(--background)', border: '1px solid var(--border)', borderRadius: '20px', fontSize: '13px', color: 'var(--text-main)', fontWeight: 500 }}>
+                                                                {note.subject_name}
                                                             </span>
-                                                        )}
-                                                    </td>
-                                                    <td style={{ padding: '16px 20px', textAlign: 'right' }}>
-                                                        <button
-                                                            className="btn btn-outline btn-small"
-                                                            style={{ color: 'var(--danger)', borderColor: 'var(--danger-light)', background: 'transparent' }}
-                                                            onMouseEnter={(e) => { e.target.style.background = 'var(--danger-light)' }}
-                                                            onMouseLeave={(e) => { e.target.style.background = 'transparent' }}
-                                                            onClick={() => { handleDeleteNote(note.id, note.filename); }}
-                                                            disabled={loading}
-                                                            title="Delete"
-                                                        >
-                                                            Delete
-                                                        </button>
-                                                    </td>
-                                                </tr>
+                                                            {noteSem !== 999 && (
+                                                                <span style={{ display: 'inline-block', marginLeft: '6px', padding: '3px 8px', background: 'var(--secondary-light)', borderRadius: '10px', fontSize: '11px', color: 'var(--secondary-hover)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                                                                    Sem {noteSem}
+                                                                </span>
+                                                            )}
+                                                        </td>
+                                                        <td style={{ padding: '16px 20px', textAlign: 'right' }}>
+                                                            <button
+                                                                className="btn btn-outline btn-small"
+                                                                style={{ color: 'var(--danger)', borderColor: 'var(--danger-light)', background: 'transparent' }}
+                                                                onMouseEnter={(e) => { e.target.style.background = 'var(--danger-light)' }}
+                                                                onMouseLeave={(e) => { e.target.style.background = 'transparent' }}
+                                                                onClick={() => { handleDeleteNote(note.id, note.filename); }}
+                                                                disabled={loading}
+                                                                title="Delete"
+                                                            >
+                                                                Delete
+                                                            </button>
+                                                        </td>
+                                                    </tr>
                                                 );
                                             })}
                                         </tbody>
@@ -933,7 +933,7 @@ function Admin() {
                     {/* ========== QUERY MANAGEMENT SECTION ========== */}
                     <div id="query-management" className="card" style={{ marginBottom: 0, padding: '32px', position: 'relative', overflow: 'hidden', scrollMarginTop: '160px' }}>
                         <div style={{ position: 'absolute', top: 0, left: 0, width: '4px', height: '100%', background: 'linear-gradient(180deg, #f59e0b, #f97316)' }}></div>
-                        
+
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                 <h2 style={{ fontSize: '20px', fontWeight: '700', color: 'var(--text-main)', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -969,8 +969,8 @@ function Admin() {
                                         border: queryStatusFilter === f.value ? 'none' : '1.5px solid var(--border)',
                                         background: queryStatusFilter === f.value
                                             ? f.value === 'open' ? 'linear-gradient(135deg, #10b981, #059669)'
-                                            : f.value === 'closed' ? 'linear-gradient(135deg, #6b7280, #4b5563)'
-                                            : 'linear-gradient(135deg, #f59e0b, #d97706)'
+                                                : f.value === 'closed' ? 'linear-gradient(135deg, #6b7280, #4b5563)'
+                                                    : 'linear-gradient(135deg, #f59e0b, #d97706)'
                                             : 'white',
                                         color: queryStatusFilter === f.value ? 'white' : 'var(--text-muted)',
                                         fontSize: '12px',
@@ -989,7 +989,7 @@ function Admin() {
                                 </button>
                             ))}
                         </div>
-                        
+
                         <div className="admin-scroll" style={{ maxHeight: '500px', overflowY: 'auto', paddingRight: '8px' }}>
                             {filteredQueries.length === 0 ? (
                                 <div style={{ padding: '40px', textAlign: 'center', background: 'var(--background)', borderRadius: '12px', border: '1px dashed var(--border)' }}>
@@ -1191,7 +1191,7 @@ function Admin() {
                     {/* ========== REPORTS MANAGEMENT SECTION ========== */}
                     <div id="reports-management" className="card" style={{ marginBottom: 0, padding: '32px', position: 'relative', overflow: 'hidden', scrollMarginTop: '160px' }}>
                         <div style={{ position: 'absolute', top: 0, left: 0, width: '4px', height: '100%', background: 'linear-gradient(180deg, #ef4444, #f97316)' }}></div>
-                        
+
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                 <h2 style={{ fontSize: '20px', fontWeight: '700', color: 'var(--text-main)', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -1214,9 +1214,9 @@ function Admin() {
                                         border: reportFilter === f ? 'none' : '1.5px solid var(--border)',
                                         background: reportFilter === f
                                             ? f === 'pending' ? 'linear-gradient(135deg, #f59e0b, #d97706)'
-                                            : f === 'reviewed' ? 'linear-gradient(135deg, #10b981, #059669)'
-                                            : f === 'dismissed' ? 'linear-gradient(135deg, #6b7280, #4b5563)'
-                                            : 'linear-gradient(135deg, #6366f1, #4f46e5)'
+                                                : f === 'reviewed' ? 'linear-gradient(135deg, #10b981, #059669)'
+                                                    : f === 'dismissed' ? 'linear-gradient(135deg, #6b7280, #4b5563)'
+                                                        : 'linear-gradient(135deg, #6366f1, #4f46e5)'
                                             : 'white',
                                         color: reportFilter === f ? 'white' : 'var(--text-muted)',
                                         fontSize: '13px',
@@ -1271,7 +1271,7 @@ function Admin() {
                                                     borderRadius: '10px',
                                                     background: r.status === 'pending' ? '#fef3c7'
                                                         : r.status === 'reviewed' ? '#d1fae5'
-                                                        : '#f3f4f6',
+                                                            : '#f3f4f6',
                                                     display: 'flex',
                                                     alignItems: 'center',
                                                     justifyContent: 'center',

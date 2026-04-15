@@ -54,13 +54,16 @@
 .messages-area::-webkit-scrollbar {
     width: 6px;
 }
+
 .messages-area::-webkit-scrollbar-track {
     background: transparent;
 }
+
 .messages-area::-webkit-scrollbar-thumb {
     background: #cbd5e1;
     border-radius: 3px;
 }
+
 .messages-area::-webkit-scrollbar-thumb:hover {
     background: #94a3b8;
 }
@@ -123,8 +126,15 @@
 }
 
 @keyframes slideIn {
-    from { opacity: 0; transform: translateY(12px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .message-user {
@@ -162,7 +172,8 @@
     padding: 16px 20px;
     border-radius: 16px;
     font-size: 15px;
-    line-height: 32px; /* aligns with notebook background lines */
+    line-height: 32px;
+    /* aligns with notebook background lines */
     word-wrap: break-word;
     overflow-x: auto;
     box-shadow: var(--shadow-sm);
@@ -199,24 +210,33 @@
 .markdown-body p {
     margin: 0 0 16px 0;
 }
+
 .markdown-body p:last-child {
     margin-bottom: 0;
 }
 
-.markdown-body h1, .markdown-body h2, .markdown-body h3, .markdown-body h4 {
+.markdown-body h1,
+.markdown-body h2,
+.markdown-body h3,
+.markdown-body h4 {
     margin: 24px 0 12px 0;
     font-weight: 600;
     line-height: 1.4;
     color: inherit;
 }
-.message-ai .markdown-body h1, .message-ai .markdown-body h2, .message-ai .markdown-body h3 {
+
+.message-ai .markdown-body h1,
+.message-ai .markdown-body h2,
+.message-ai .markdown-body h3 {
     color: var(--primary-hover);
 }
 
-.markdown-body ul, .markdown-body ol {
+.markdown-body ul,
+.markdown-body ol {
     margin: 12px 0;
     padding-left: 24px;
 }
+
 .markdown-body li {
     margin-bottom: 8px;
 }
@@ -224,22 +244,25 @@
 .markdown-body strong {
     font-weight: 600;
 }
+
 .message-ai .markdown-body strong {
     color: var(--primary-hover);
 }
+
 .message-user .markdown-body strong {
     color: #e0e7ff;
 }
 
 .markdown-body code {
     font-family: 'JetBrains Mono', 'Courier New', Courier, monospace;
-    background: rgba(0,0,0,0.05);
+    background: rgba(0, 0, 0, 0.05);
     padding: 2px 6px;
     border-radius: 4px;
     font-size: 0.9em;
 }
+
 .message-user .markdown-body code {
-    background: rgba(255,255,255,0.2);
+    background: rgba(255, 255, 255, 0.2);
     color: #fff;
 }
 
@@ -252,6 +275,7 @@
     margin: 12px 0;
     line-height: 1.5;
 }
+
 .markdown-body pre code {
     background: none;
     color: inherit;
@@ -259,8 +283,15 @@
 }
 
 /* KaTeX inline math */
-.markdown-body .katex { font-size: 1.05em; }
-.markdown-body .katex-display { margin: 12px 0; overflow-x: auto; overflow-y: hidden; }
+.markdown-body .katex {
+    font-size: 1.05em;
+}
+
+.markdown-body .katex-display {
+    margin: 12px 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+}
 
 .markdown-body blockquote {
     margin: 12px 0;
@@ -270,24 +301,26 @@
     border-radius: 0 8px 8px 0;
     font-style: italic;
 }
+
 .message-user .markdown-body blockquote {
     border-left-color: #93c5fd;
-    background: rgba(255,255,255,0.1);
+    background: rgba(255, 255, 255, 0.1);
 }
 
 .message-sources {
     padding: 10px 14px;
-    background: rgba(255,255,255, 0.8);
+    background: rgba(255, 255, 255, 0.8);
     border: 1px solid var(--border);
     border-radius: 8px;
     font-size: 13px;
     color: var(--text-muted);
     backdrop-filter: blur(4px);
 }
+
 .message-user .message-sources {
-    background: rgba(255,255,255,0.15);
+    background: rgba(255, 255, 255, 0.15);
     color: #e0e7ff;
-    border-color: rgba(255,255,255,0.2);
+    border-color: rgba(255, 255, 255, 0.2);
 }
 
 .message-time {
@@ -296,9 +329,10 @@
     padding: 0 4px;
     margin-top: 2px;
 }
+
 .message-user .message-time {
     text-align: right;
-    color: rgba(255,255,255,0.7);
+    color: rgba(255, 255, 255, 0.7);
 }
 
 /* Typing Indicator */
@@ -312,6 +346,7 @@
     border-bottom-left-radius: 4px;
     align-items: center;
 }
+
 .typing-indicator span {
     width: 8px;
     height: 8px;
@@ -319,11 +354,26 @@
     border-radius: 50%;
     animation: typingBounce 1.4s infinite ease-in-out both;
 }
-.typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
-.typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
+
+.typing-indicator span:nth-child(1) {
+    animation-delay: -0.32s;
+}
+
+.typing-indicator span:nth-child(2) {
+    animation-delay: -0.16s;
+}
+
 @keyframes typingBounce {
-    0%, 80%, 100% { transform: scale(0); }
-    40% { transform: scale(1); }
+
+    0%,
+    80%,
+    100% {
+        transform: scale(0);
+    }
+
+    40% {
+        transform: scale(1);
+    }
 }
 
 /* Input Area Restyled */
@@ -402,13 +452,16 @@
     .messages-area {
         padding: 16px;
     }
+
     .input-area {
         padding: 16px;
         gap: 12px;
     }
+
     .message-content {
         max-width: 85%;
     }
+
     .message-avatar {
         font-size: 20px;
         width: 36px;
